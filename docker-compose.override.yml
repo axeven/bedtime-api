@@ -1,0 +1,25 @@
+# Development overrides for docker-compose.yml
+# This file is automatically loaded by docker-compose
+
+version: '3.8'
+
+services:
+  # Development overrides for the web service
+  web:
+    environment:
+      - RAILS_LOG_LEVEL=debug
+      - RAILS_LOG_TO_STDOUT=true
+    volumes:
+      # Mount the entire app directory for live code reloading
+      - .:/app
+      # Persist bundle cache between container rebuilds
+      - bundle_cache:/usr/local/bundle
+      # Mount tmp directory to host for easier debugging
+      - ./tmp:/app/tmp
+    # Enable debugging with pry/byebug
+    stdin_open: true
+    tty: true
+
+  # Additional volumes for development
+volumes:
+  bundle_cache:

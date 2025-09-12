@@ -1,0 +1,141 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: bedtime_postgres
+    environment:
+      POSTGRES_DB: bedtime_development
+      POSTGRES_USER: bedtime_user
+      POSTGRES_PASSWORD: bedtime_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d
+    networks:
+      - bedtime_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bedtime_user -d bedtime_development"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: bedtime_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - bedtime_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Rails Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: bedtime_api
+    environment:
+      RAILS_ENV: development
+      DATABASE_HOST: postgres
+      DATABASE_NAME: bedtime_development
+      DATABASE_USER: bedtime_user
+      DATABASE_PASSWORD: bedtime_password
+      REDIS_URL: redis://redis:6379/0
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY:-}
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - bundle_cache:/usr/local/bundle
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bedtime_network
+    stdin_open: true
+    tty: true
+    command: >
+      bash -c "
+        bundle install &&
+        rails db:prepare &&
+        rails db:seed &&
+        rails server -b 0.0.0.0 -p 3000
+      "
+
+  # Test Database (separate from development)
+  postgres_test:
+    image: postgres:15
+    container_name: bedtime_postgres_test
+    environment:
+      POSTGRES_DB: bedtime_test
+      POSTGRES_USER: bedtime_user
+      POSTGRES_PASSWORD: bedtime_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    networks:
+      - bedtime_network
+    profiles:
+      - test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bedtime_user -d bedtime_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Test Runner
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: bedtime_test
+    environment:
+      RAILS_ENV: test
+      DATABASE_HOST: postgres_test
+      DATABASE_NAME: bedtime_test
+      DATABASE_USER: bedtime_user
+      DATABASE_PASSWORD: bedtime_password
+      REDIS_URL: redis://redis:6379/1
+    volumes:
+      - .:/app
+      - bundle_cache:/usr/local/bundle
+    depends_on:
+      postgres_test:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bedtime_network
+    profiles:
+      - test
+    command: >
+      bash -c "
+        bundle install &&
+        rails db:prepare &&
+        rails test
+      "
+
+volumes:
+  postgres_data:
+  postgres_test_data:
+  redis_data:
+  bundle_cache:
+
+networks:
+  bedtime_network:
+    driver: bridge

@@ -1,0 +1,44 @@
+# Development Dockerfile for Bedtime API
+FROM ruby:3.4.5-slim
+
+# Install system dependencies
+RUN apt-get update -qq && \
+    apt-get install -y \
+      build-essential \
+      libpq-dev \
+      postgresql-client \
+      nodejs \
+      npm \
+      git \
+      curl \
+      vim \
+      libyaml-dev \
+      pkg-config && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy Gemfile and Gemfile.lock first for better Docker layer caching
+COPY Gemfile Gemfile.lock ./
+
+# Configure bundler for development
+RUN bundle config set --local deployment false && \
+    bundle config set --local without '' && \
+    bundle config set --local path /usr/local/bundle
+
+# Install Ruby dependencies
+RUN bundle install
+
+# Copy the rest of the application code
+COPY . .
+
+# Create necessary directories with proper permissions
+RUN mkdir -p tmp/pids tmp/cache tmp/sockets log storage && \
+    chmod -R 755 tmp log storage
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Default command for development
+CMD ["rails", "server", "-b", "0.0.0.0", "-p", "3000"]
