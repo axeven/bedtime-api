@@ -13,7 +13,7 @@ paths:
       summary: Create a new user
       tags:
       - Users
-      description: Returned when required parameters are missing or invalid
+      description: Returned when JSON payload is malformed or unparseable
       parameters: []
       responses:
         '201':

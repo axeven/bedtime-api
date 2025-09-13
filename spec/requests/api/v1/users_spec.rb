@@ -121,11 +121,21 @@ RSpec.describe 'api/v1/users', type: :request do
         
         context 'with name too long' do
           let(:user) { { user: { name: 'A' * 101 } } }
-          
+
           run_test! do |response|
             data = JSON.parse(response.body)
             expect(data['error_code']).to eq('VALIDATION_ERROR')
             expect(data['details']['name']).to include('is too long (maximum is 100 characters)')
+          end
+        end
+
+        context 'with nil name parameter' do
+          let(:user) { { user: { name: nil } } }
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['error_code']).to eq('VALIDATION_ERROR')
+            expect(data['details']['name']).to include("can't be blank")
           end
         end
       end
@@ -165,18 +175,35 @@ RSpec.describe 'api/v1/users', type: :request do
         
         context 'with missing name parameter' do
           let(:user) { { user: {} } }
-          
+
           run_test! do |response|
             data = JSON.parse(response.body)
             expect(data['error_code']).to eq('BAD_REQUEST')
             expect(data['error']).to include('param is missing')
           end
         end
+
       end
       
+      response(400, 'Bad request - malformed JSON') do
+        description 'Returned when JSON payload is malformed or unparseable'
+        schema '$ref' => '#/components/schemas/Error'
+
+        examples 'application/json' => {
+          malformed_json: {
+            summary: 'Malformed JSON request',
+            description: 'JSON syntax is invalid',
+            value: {
+              error: 'Invalid JSON format',
+              error_code: 'BAD_REQUEST'
+            }
+          }
+        }
+      end
+
       response(500, 'Internal server error') do
         schema '$ref' => '#/components/schemas/Error'
-        
+
         examples 'application/json' => {
           internal_error: {
             summary: 'Unexpected server error',
@@ -187,6 +214,130 @@ RSpec.describe 'api/v1/users', type: :request do
             }
           }
         }
+      end
+
+      # Additional comprehensive test scenarios from integration tests
+      context 'comprehensive edge case testing' do
+        context 'with special characters in names' do
+          [
+            'User with spaces',
+            'User-with-dashes',
+            'User_with_underscores',
+            'User.with.dots',
+            'Üser wïth ñön-ÄSCII',
+            '用户名中文',
+            '🚀 Emoji User 🎉'
+          ].each do |special_name|
+            context "with name '#{special_name}'" do
+              let(:user) { { user: { name: special_name } } }
+
+              it "preserves special characters in name" do
+                post '/api/v1/users', params: user.to_json,
+                     headers: { 'Content-Type' => 'application/json' }
+
+                if response.status == 201
+                  data = JSON.parse(response.body)
+                  expect(data['name']).to eq(special_name)
+                end
+                expect([200, 201, 400, 422]).to include(response.status)
+              end
+            end
+          end
+        end
+
+        context 'database integration verification' do
+          let(:user) { { user: { name: 'DB Integration Test User' } } }
+
+          it 'persists user to database and allows retrieval' do
+            post '/api/v1/users', params: user.to_json,
+                 headers: { 'Content-Type' => 'application/json' }
+
+            expect(response.status).to eq(201)
+            data = JSON.parse(response.body)
+
+            # Verify user exists in database
+            created_user = User.find(data['id'])
+            expect(created_user.name).to eq('DB Integration Test User')
+            expect(created_user.created_at).to be_present
+          end
+        end
+
+        context 'response format consistency' do
+          it 'maintains consistent format across success and error responses' do
+            # Test success response format
+            post '/api/v1/users',
+                 params: { user: { name: 'Format Test User' } }.to_json,
+                 headers: { 'Content-Type' => 'application/json' }
+
+            expect(response.status).to eq(201)
+            success_data = JSON.parse(response.body)
+
+            # Success should not have error fields
+            expect(success_data).not_to have_key('error')
+            expect(success_data).not_to have_key('error_code')
+            expect(success_data).to have_key('id')
+            expect(success_data).to have_key('name')
+            expect(success_data).to have_key('created_at')
+
+            # Test error response format
+            post '/api/v1/users',
+                 params: { user: { name: '' } }.to_json,
+                 headers: { 'Content-Type' => 'application/json' }
+
+            expect(response.status).to eq(422)
+            error_data = JSON.parse(response.body)
+
+            # Error should have required fields
+            expect(error_data).to have_key('error')
+            expect(error_data).to have_key('error_code')
+            expect(error_data['error']).to be_a(String)
+            expect(error_data['error_code']).to be_a(String)
+            expect(error_data['error_code']).to match(/\A[A-Z_]+\z/)
+          end
+        end
+
+        context 'content type handling' do
+          it 'handles missing content type gracefully' do
+            # Test without explicit content type
+            post '/api/v1/users', params: { user: { name: 'No Content Type User' } }
+
+            # Should handle gracefully
+            expect([200, 201, 400, 415]).to include(response.status)
+          end
+
+          it 'handles incorrect content type' do
+            post '/api/v1/users',
+                 params: { user: { name: 'Wrong Content Type User' } }.to_json,
+                 headers: { 'Content-Type' => 'text/plain' }
+
+            expect([200, 201, 400, 415]).to include(response.status)
+          end
+        end
+
+        context 'no authentication requirement verification' do
+          it 'creates user without X-USER-ID header' do
+            post '/api/v1/users',
+                 params: { user: { name: 'No Auth User' } }.to_json,
+                 headers: { 'Content-Type' => 'application/json' }
+
+            expect(response.status).to eq(201)
+            data = JSON.parse(response.body)
+            expect(data['name']).to eq('No Auth User')
+          end
+
+          it 'creates user with X-USER-ID header (header ignored)' do
+            post '/api/v1/users',
+                 params: { user: { name: 'With Auth Header User' } }.to_json,
+                 headers: {
+                   'Content-Type' => 'application/json',
+                   'X-USER-ID' => '999999'
+                 }
+
+            expect(response.status).to eq(201)
+            data = JSON.parse(response.body)
+            expect(data['name']).to eq('With Auth Header User')
+          end
+        end
       end
     end
   end

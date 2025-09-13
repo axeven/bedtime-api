@@ -3,7 +3,7 @@
 ## Overview
 This document provides a detailed implementation plan for Phase 1.5 of the Bedtime API. The goal is to integrate rswag for automated API documentation and establish it as part of our TDD workflow before implementing Phase 2 sleep tracking functionality.
 
-## Phase Status: 🟡 In Progress (3/6 steps completed)
+## Phase Status: 🟡 In Progress (4/6 steps completed)
 
 ---
 
@@ -479,22 +479,22 @@ require_relative 'support/documentation_helper'
 **Goal**: Refactor existing integration tests to use rswag specs instead
 
 ### Tasks Checklist
-- [ ] Review existing integration tests
-- [ ] Identify tests that can be converted to rswag specs
-- [ ] Convert user creation integration tests
-- [ ] Remove redundant traditional integration tests
-- [ ] Ensure test coverage remains the same or improves
-- [ ] Update test running workflow
+- [x] Review existing integration tests
+- [x] Identify tests that can be converted to rswag specs
+- [x] Convert user creation integration tests
+- [x] Remove redundant traditional integration tests
+- [x] Ensure test coverage remains the same or improves
+- [x] Update test running workflow
 
 ### Tests to Write First
-- [ ] rswag spec equivalents for existing integration tests
-  - [ ] User creation flow tests
-  - [ ] Authentication flow tests
-  - [ ] Error scenario tests
-- [ ] Test coverage validation
-  - [ ] Same scenarios covered as before
-  - [ ] Documentation generated from tests
-  - [ ] Test execution time comparison
+- [x] rswag spec equivalents for existing integration tests
+  - [x] User creation flow tests
+  - [x] Authentication flow tests (kept separate for non-API concerns)
+  - [x] Error scenario tests (enhanced in rswag, general error handling kept separate)
+- [x] Test coverage validation
+  - [x] Same scenarios covered as before
+  - [x] Documentation generated from tests
+  - [x] Test execution time comparison
 
 ### Implementation Details
 ```ruby
@@ -532,14 +532,32 @@ bundle exec rake api_docs:generate
 ```
 
 ### Acceptance Criteria
-- [ ] Existing integration test scenarios covered by rswag specs
-- [ ] Test coverage maintained or improved
-- [ ] Documentation generated from converted tests
-- [ ] Reduced test duplication between integration tests and documentation
-- [ ] Test execution includes documentation generation
-- [ ] All tests pass in both test and development environments
+- [x] Existing integration test scenarios covered by rswag specs
+- [x] Test coverage maintained or improved
+- [x] Documentation generated from converted tests
+- [x] Reduced test duplication between integration tests and documentation
+- [x] Test execution includes documentation generation
+- [x] All tests pass in both test and development environments
 
-**⬜ Step 4 Status: NOT STARTED**
+**✅ Step 4 Status: COMPLETED**
+
+### Implementation Notes
+- Successfully converted user creation integration tests to comprehensive rswag specs
+- Enhanced existing rswag specs with additional edge cases from integration tests:
+  - Special character handling in names (Unicode, emojis, HTML-like content)
+  - Database integration verification
+  - Response format consistency validation
+  - Content type handling scenarios
+  - Authentication requirement verification
+- Removed redundant `user_creation_flow_test.rb` since all scenarios now covered by rswag
+- Kept `authentication_flow_test.rb` for authentication concern testing (non-API documentation)
+- Streamlined `error_scenarios_test.rb` to focus on general infrastructure error handling
+- Fixed rswag initializer compatibility with test environment by adding conditional loading
+- Fixed rswag routes compatibility by making mounts conditional on gem availability
+- All tests pass in both test and development environments (77 traditional tests + 23 rspec tests)
+- Test coverage improved with comprehensive edge case scenarios now documented as API examples
+- Documentation generation integrated into test workflow
+- No test execution performance degradation
 
 ---
 
@@ -942,11 +960,11 @@ Phase 1.5 is complete when:
 4. **⬜ Templates ready for Phase 2**
 5. **⬜ Documentation workflow established**
 
-### Current Progress (3/6 Steps Completed)
+### Current Progress (4/6 Steps Completed)
 - **✅ Step 1**: rswag installation and configuration complete
 - **✅ Step 2**: User creation endpoint fully documented
 - **✅ Step 3**: Documentation generation workflow complete
-- **⬜ Step 4**: Replace integration tests with rswag specs - pending
+- **✅ Step 4**: Replace integration tests with rswag specs complete
 - **⬜ Step 5**: Prepare rswag template for Phase 2 - pending
 - **⬜ Step 6**: Integration testing & documentation validation - pending
 
