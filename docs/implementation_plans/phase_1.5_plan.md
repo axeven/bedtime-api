@@ -3,7 +3,7 @@
 ## Overview
 This document provides a detailed implementation plan for Phase 1.5 of the Bedtime API. The goal is to integrate rswag for automated API documentation and establish it as part of our TDD workflow before implementing Phase 2 sleep tracking functionality.
 
-## Phase Status: 🟡 In Progress (4/6 steps completed)
+## Phase Status: 🟡 In Progress (5/6 steps completed)
 
 ---
 
@@ -565,22 +565,22 @@ bundle exec rake api_docs:generate
 **Goal**: Create templates and patterns for documenting Phase 2 sleep tracking endpoints
 
 ### Tasks Checklist
-- [ ] Create rswag spec template for sleep record endpoints
-- [ ] Define common schemas for sleep tracking
-- [ ] Set up authentication documentation patterns
-- [ ] Create reusable response schemas
-- [ ] Prepare endpoint documentation structure
-- [ ] Document API versioning approach
+- [x] Create rswag spec template for sleep record endpoints
+- [x] Define common schemas for sleep tracking
+- [x] Set up authentication documentation patterns
+- [x] Create reusable response schemas
+- [x] Prepare endpoint documentation structure
+- [x] Document API versioning approach
 
 ### Tests to Write First
-- [ ] Template validation tests
-  - [ ] Schema templates are valid OpenAPI
-  - [ ] Authentication patterns work correctly
-  - [ ] Reusable components function properly
-- [ ] Documentation structure tests
-  - [ ] New endpoints fit into existing structure
-  - [ ] Versioning approach works
-  - [ ] Template generation is consistent
+- [x] Template validation tests
+  - [x] Schema templates are valid OpenAPI
+  - [x] Authentication patterns work correctly
+  - [x] Reusable components function properly
+- [x] Documentation structure tests
+  - [x] New endpoints fit into existing structure
+  - [x] Versioning approach works
+  - [x] Template generation is consistent
 
 ### Implementation Details
 ```ruby
@@ -783,14 +783,28 @@ end
 ```
 
 ### Acceptance Criteria
-- [ ] rswag templates created for sleep record endpoints
-- [ ] Common schemas defined and reusable
-- [ ] Authentication patterns established
-- [ ] Documentation structure supports Phase 2 endpoints
-- [ ] Templates validate as proper OpenAPI specs
-- [ ] Ready to use for Phase 2 implementation
+- [x] rswag templates created for sleep record endpoints
+- [x] Common schemas defined and reusable
+- [x] Authentication patterns established
+- [x] Documentation structure supports Phase 2 endpoints
+- [x] Templates validate as proper OpenAPI specs
+- [x] Ready to use for Phase 2 implementation
 
-**⬜ Step 5 Status: NOT STARTED**
+**✅ Step 5 Status: COMPLETED**
+
+### Implementation Notes
+- Successfully created comprehensive rswag templates for Phase 2 sleep tracking:
+  - `spec/support/sleep_record_schemas.rb` - Complete schema definitions for sleep records, collections, requests, and specialized error types
+  - `spec/support/authentication_helpers.rb` - Reusable authentication patterns with helper methods and test scenarios
+  - `spec/requests/api/v1/sleep_records_spec.rb` - Full template with 5 endpoints (POST /sleep_records, GET /sleep_records, PATCH /sleep_records/:id, GET /sleep_records/:id, DELETE /sleep_records/:id)
+  - `spec/support/README.md` - Comprehensive documentation on usage patterns, versioning strategy, and development workflow
+- Enhanced swagger_helper.rb with 6 new schema components:
+  - SleepRecord, SleepRecordsCollection, ClockInRequest, ClockOutRequest, ActiveSessionError, NoActiveSessionError
+- Established authentication patterns with `requires_authentication` and `document_authentication_errors` helpers
+- All templates validated with successful documentation generation (48 examples vs 23 before)
+- Created detailed usage guide covering TDD approach, schema evolution, error handling standards, and API versioning
+- Templates support comprehensive test scenarios including edge cases, authentication flows, and error conditions
+- Ready for immediate use in Phase 2 implementation with established patterns for consistency
 
 ---
 
@@ -960,12 +974,12 @@ Phase 1.5 is complete when:
 4. **⬜ Templates ready for Phase 2**
 5. **⬜ Documentation workflow established**
 
-### Current Progress (4/6 Steps Completed)
+### Current Progress (5/6 Steps Completed)
 - **✅ Step 1**: rswag installation and configuration complete
 - **✅ Step 2**: User creation endpoint fully documented
 - **✅ Step 3**: Documentation generation workflow complete
 - **✅ Step 4**: Replace integration tests with rswag specs complete
-- **⬜ Step 5**: Prepare rswag template for Phase 2 - pending
+- **✅ Step 5**: Prepare rswag template for Phase 2 complete
 - **⬜ Step 6**: Integration testing & documentation validation - pending
 
 **Next Phase**: Move to Phase 2 - Sleep Record Core Functionality (using rswag for TDD)
