@@ -10,28 +10,76 @@ info:
 paths:
   "/api/v1/users":
     post:
-      summary: Create user
+      summary: Create a new user
       tags:
       - Users
-      description: Creates a new user for development/testing purposes
+      description: Returned when required parameters are missing or invalid
       parameters: []
       responses:
         '201':
           description: User created successfully
           content:
             application/json:
+              examples:
+                example_0:
+                  value:
+                    successful_creation:
+                      summary: Successful user creation
+                      description: User created with valid name
+                      value:
+                        id: 1
+                        name: Alice Johnson
+                        created_at: '2024-01-15T14:30:00Z'
               schema:
                 "$ref": "#/components/schemas/User"
         '422':
           description: Validation failed
           content:
             application/json:
+              examples:
+                example_0:
+                  value:
+                    blank_name:
+                      summary: Blank name validation error
+                      description: Name cannot be empty
+                      value:
+                        error: Validation failed
+                        error_code: VALIDATION_ERROR
+                        details:
+                          name:
+                          - can't be blank
+                    name_too_long:
+                      summary: Name too long validation error
+                      description: Name exceeds maximum length
+                      value:
+                        error: Validation failed
+                        error_code: VALIDATION_ERROR
+                        details:
+                          name:
+                          - is too long (maximum is 100 characters)
               schema:
                 "$ref": "#/components/schemas/ValidationError"
         '400':
           description: Bad request - missing parameters
           content:
             application/json:
+              examples:
+                example_0:
+                  value:
+                    missing_user_param:
+                      summary: Missing user parameter
+                      description: The user parameter is required
+                      value:
+                        error: 'param is missing or the value is empty or invalid:
+                          user'
+                        error_code: BAD_REQUEST
+                    missing_name_param:
+                      summary: Missing name parameter
+                      description: The name parameter within user is required
+                      value:
+                        error: 'param is missing or the value is empty or invalid:
+                          name'
+                        error_code: BAD_REQUEST
               schema:
                 "$ref": "#/components/schemas/Error"
       requestBody:
@@ -42,17 +90,25 @@ paths:
               properties:
                 user:
                   type: object
+                  description: User attributes
                   properties:
                     name:
                       type: string
-                      description: User name
+                      description: Full name of the user
                       example: John Doe
                       minLength: 1
                       maxLength: 100
                   required:
                   - name
+                  additionalProperties: false
               required:
               - user
+              additionalProperties: false
+              example:
+                user:
+                  name: Alice Johnson
+        required: true
+        description: User creation payload
 servers:
 - url: http://localhost:3000
   description: Development server
