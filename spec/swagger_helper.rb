@@ -2,6 +2,8 @@
 
 require 'rails_helper'
 require_relative 'support/documentation_helper'
+require_relative 'support/authentication_helpers'
+require_relative 'support/sleep_record_schemas'
 
 RSpec.configure do |config|
   # Specify a root folder where Swagger JSON files are generated
@@ -86,15 +88,21 @@ RSpec.configure do |config|
             properties: {
               id: { type: :integer, description: 'User ID', example: 1 },
               name: { type: :string, description: 'User name', example: 'John Doe' },
-              created_at: { 
-                type: :string, 
+              created_at: {
+                type: :string,
                 format: :datetime,
                 description: 'User creation timestamp',
                 example: '2024-01-15T10:30:00Z'
               }
             },
             required: ['id', 'name', 'created_at']
-          }
+          },
+          SleepRecord: SleepRecordSchemas.sleep_record_schema,
+          SleepRecordsCollection: SleepRecordSchemas.sleep_records_collection_schema,
+          ClockInRequest: SleepRecordSchemas.clock_in_request_schema,
+          ClockOutRequest: SleepRecordSchemas.clock_out_request_schema,
+          ActiveSessionError: SleepRecordSchemas.active_session_error_schema,
+          NoActiveSessionError: SleepRecordSchemas.no_active_session_error_schema
         }
       }
     }
