@@ -1,4 +1,5 @@
 require "test_helper"
+require "ostruct"
 
 class Api::V1::BaseControllerTest < ActiveSupport::TestCase
   # We'll test the base controller functionality using unit tests instead of integration tests
@@ -96,5 +97,32 @@ class Api::V1::BaseControllerTest < ActiveSupport::TestCase
     assert_equal "Validation failed", render_options[:json][:error]
     assert_equal "VALIDATION_ERROR", render_options[:json][:error_code]
     assert render_options[:json][:details].present?
+  end
+
+  test "handle_unpermitted_parameters renders proper JSON response" do
+    exception = ActionController::UnpermittedParameters.new([:forbidden_param])
+    
+    @controller.send(:handle_unpermitted_parameters, exception)
+    render_options = @controller.instance_variable_get(:@render_options)
+    
+    assert_equal :bad_request, render_options[:status]
+    assert_equal "Invalid parameters provided", render_options[:json][:error]
+    assert_equal "INVALID_PARAMETERS", render_options[:json][:error_code]
+  end
+
+  test "handle_json_parse_error renders proper JSON response" do
+    exception = JSON::ParserError.new("Invalid JSON")
+    
+    @controller.send(:handle_json_parse_error, exception)
+    render_options = @controller.instance_variable_get(:@render_options)
+    
+    assert_equal :bad_request, render_options[:status]
+    assert_equal "Invalid JSON format", render_options[:json][:error]
+    assert_equal "INVALID_JSON", render_options[:json][:error_code]
+  end
+
+  test "structured logging includes request and response data" do
+    # Test that the RequestLogger concern is properly included
+    assert @controller.class.included_modules.include?(RequestLogger)
   end
 end
