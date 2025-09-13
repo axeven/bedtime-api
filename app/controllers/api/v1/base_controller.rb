@@ -1,4 +1,6 @@
 class Api::V1::BaseController < ApplicationController
+  include Authenticatable
+
   rescue_from StandardError, with: :handle_standard_error
   rescue_from ActiveRecord::RecordNotFound, with: :handle_not_found
   rescue_from ActionController::ParameterMissing, with: :handle_bad_request
