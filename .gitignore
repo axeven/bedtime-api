@@ -30,3 +30,9 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+
+# But keep the directory structure
+!swagger/
+!swagger/v1/
+swagger/v1/*
+!swagger/v1/.gitkeep

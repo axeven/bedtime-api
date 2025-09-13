@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
+require_relative 'support/documentation_helper'
 
 RSpec.configure do |config|
   # Specify a root folder where Swagger JSON files are generated

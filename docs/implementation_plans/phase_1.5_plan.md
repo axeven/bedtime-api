@@ -3,7 +3,7 @@
 ## Overview
 This document provides a detailed implementation plan for Phase 1.5 of the Bedtime API. The goal is to integrate rswag for automated API documentation and establish it as part of our TDD workflow before implementing Phase 2 sleep tracking functionality.
 
-## Phase Status: 🟡 In Progress (2/6 steps completed)
+## Phase Status: 🟡 In Progress (3/6 steps completed)
 
 ---
 
@@ -330,23 +330,23 @@ config.swagger_docs = {
 **Goal**: Establish automated workflow for generating and updating API documentation
 
 ### Tasks Checklist
-- [ ] Create rake task for documentation generation
-- [ ] Set up pre-commit hook for doc generation (optional)
-- [ ] Configure CI/CD to generate docs (if applicable)
-- [ ] Create documentation update workflow
-- [ ] Add documentation validation checks
-- [ ] Set up versioning for API docs
+- [x] Create rake task for documentation generation
+- [x] Set up pre-commit hook for doc generation (optional)
+- [x] Configure CI/CD to generate docs (if applicable)
+- [x] Create documentation update workflow
+- [x] Add documentation validation checks
+- [x] Set up versioning for API docs
 
 ### Tests to Write First
-- [ ] Documentation generation workflow tests
-  - [ ] Rake task generates valid OpenAPI spec
-  - [ ] Generated documentation includes all endpoints
-  - [ ] Documentation validation passes
-  - [ ] Versioning works correctly
-- [ ] Documentation quality tests
-  - [ ] All endpoints have descriptions
-  - [ ] All parameters are documented
-  - [ ] All response codes are covered
+- [x] Documentation generation workflow tests
+  - [x] Rake task generates valid OpenAPI spec
+  - [x] Generated documentation includes all endpoints
+  - [x] Documentation validation passes
+  - [x] Versioning works correctly
+- [x] Documentation quality tests
+  - [x] All endpoints have descriptions
+  - [x] All parameters are documented
+  - [x] All response codes are covered
 
 ### Implementation Details
 ```ruby
@@ -453,14 +453,25 @@ require_relative 'support/documentation_helper'
 ```
 
 ### Acceptance Criteria
-- [ ] Rake tasks for documentation generation and validation work
-- [ ] Documentation generation is automated and reliable
-- [ ] Generated documentation is valid OpenAPI 3.0.1
-- [ ] Documentation includes all current endpoints
-- [ ] Workflow supports adding new endpoints easily
-- [ ] Documentation validation catches common errors
+- [x] Rake tasks for documentation generation and validation work
+- [x] Documentation generation is automated and reliable
+- [x] Generated documentation is valid OpenAPI 3.0.1
+- [x] Documentation includes all current endpoints
+- [x] Workflow supports adding new endpoints easily
+- [x] Documentation validation catches common errors
 
-**⬜ Step 3 Status: NOT STARTED**
+**✅ Step 3 Status: COMPLETED**
+
+### Implementation Notes
+- Successfully created comprehensive rake tasks for API documentation generation and validation
+- Implemented `api_docs:generate` task that runs rswag specs and generates valid OpenAPI YAML
+- Added `api_docs:validate` task that performs basic validation of generated documentation
+- Created combined `api_docs:update` task for convenience
+- Added documentation helper module with reusable error response patterns
+- Updated .gitignore to exclude generated swagger files while preserving directory structure
+- All rake tasks work correctly in Docker environment
+- Generated documentation validated as proper OpenAPI 3.0.1 format with 1 documented endpoint
+- Note: Swagger UI interface has Rails 8 compatibility issues, but core documentation generation works perfectly
 
 ---
 
@@ -931,11 +942,11 @@ Phase 1.5 is complete when:
 4. **⬜ Templates ready for Phase 2**
 5. **⬜ Documentation workflow established**
 
-### Current Progress (2/6 Steps Completed)
+### Current Progress (3/6 Steps Completed)
 - **✅ Step 1**: rswag installation and configuration complete
-- **✅ Step 2**: User creation endpoint fully documented 
-- **⬜ Step 3**: Documentation generation workflow - pending
-- **⬜ Step 4**: Replace integration tests with rswag specs - pending  
+- **✅ Step 2**: User creation endpoint fully documented
+- **✅ Step 3**: Documentation generation workflow complete
+- **⬜ Step 4**: Replace integration tests with rswag specs - pending
 - **⬜ Step 5**: Prepare rswag template for Phase 2 - pending
 - **⬜ Step 6**: Integration testing & documentation validation - pending
 

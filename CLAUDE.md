@@ -76,6 +76,7 @@ docker-compose logs web -f
 3. **Update docs**: Keep phase_1_plan.md and high_level_plan.md current
 4. **Test end-to-end**: Manual testing with curl commands
 5. **Docker-only**: Use Docker for all Rails commands
+6. **Regenerate API docs**: Always run `bundle exec rake api_docs:update` after API changes
 
 ### API Endpoint Development
 - **Header validation**: Always check X-USER-ID header
@@ -152,6 +153,18 @@ docker-compose ps
 docker-compose logs web --tail=20
 ```
 
+### API Documentation Commands
+```bash
+# Generate OpenAPI documentation (run after any API changes)
+docker-compose exec web bundle exec rake api_docs:generate
+
+# Validate generated documentation
+docker-compose exec web bundle exec rake api_docs:validate
+
+# Generate and validate (recommended after API changes)
+docker-compose exec web bundle exec rake api_docs:update
+```
+
 ### API Testing
 ```bash
 # Create test user
@@ -192,6 +205,7 @@ curl -H "X-USER-ID: 1" http://localhost:3000/api/v1/endpoint
 6. Test both success and error scenarios
 7. Maintain consistent API terminology (following/follower)
 8. Verify X-USER-ID authentication on protected endpoints
+9. **CRITICAL**: Run `bundle exec rake api_docs:update` after ANY API changes (new endpoints, parameter changes, response changes)
 
 ### Quick Project Status Check:
 - **Current Phase**: Phase 1 (Foundation & Basic User Management)
