@@ -1,6 +1,6 @@
 class Api::V1::SleepRecordsController < Api::V1::BaseController
   before_action :authenticate_user
-  before_action :set_sleep_record, only: [:show, :update, :destroy]
+  before_action :set_sleep_record, only: [ :show, :update, :destroy ]
 
   def create
     # Check for existing active session
@@ -94,11 +94,11 @@ class Api::V1::SleepRecordsController < Api::V1::BaseController
     sleep_records = current_user.sleep_records.recent_first
 
     # Apply filters if provided
-    sleep_records = sleep_records.completed if params[:completed] == 'true'
-    sleep_records = sleep_records.active if params[:active] == 'true'
+    sleep_records = sleep_records.completed if params[:completed] == "true"
+    sleep_records = sleep_records.active if params[:active] == "true"
 
     # Apply pagination
-    limit = [params[:limit]&.to_i || 20, 100].min # Max 100 records
+    limit = [ params[:limit]&.to_i || 20, 100 ].min # Max 100 records
     offset = params[:offset]&.to_i || 0
 
     paginated_records = sleep_records.limit(limit).offset(offset)
@@ -185,7 +185,7 @@ class Api::V1::SleepRecordsController < Api::V1::BaseController
   def sleep_record_params
     # Default bedtime to current time if not provided
     permitted = params.permit(:bedtime, :wake_time)
-    permitted[:bedtime] ||= Time.current if action_name == 'create'
+    permitted[:bedtime] ||= Time.current if action_name == "create"
     permitted
   end
 end

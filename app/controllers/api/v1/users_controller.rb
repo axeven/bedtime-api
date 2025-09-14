@@ -1,12 +1,12 @@
 class Api::V1::UsersController < Api::V1::BaseController
-  skip_before_action :authenticate_user, only: [:create]
+  skip_before_action :authenticate_user, only: [ :create ]
 
   def create
     # Optional: Restrict to development/test environments
     unless Rails.env.development? || Rails.env.test?
-      render json: { 
-        error: "Endpoint not available in production", 
-        error_code: "FORBIDDEN" 
+      render json: {
+        error: "Endpoint not available in production",
+        error_code: "FORBIDDEN"
       }, status: :forbidden
       return
     end

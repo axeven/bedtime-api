@@ -8,12 +8,12 @@ module Authenticatable
   private
 
   def authenticate_user
-    user_id = request.headers['X-USER-ID']
+    user_id = request.headers["X-USER-ID"]
 
     if user_id.blank?
-      render json: { 
-        error: "X-USER-ID header is required", 
-        error_code: "MISSING_USER_ID" 
+      render json: {
+        error: "X-USER-ID header is required",
+        error_code: "MISSING_USER_ID"
       }, status: :bad_request
       return
     end
@@ -21,11 +21,11 @@ module Authenticatable
     @current_user = User.find_by(id: user_id)
 
     if @current_user.nil?
-      render json: { 
-        error: "User not found", 
-        error_code: "USER_NOT_FOUND" 
+      render json: {
+        error: "User not found",
+        error_code: "USER_NOT_FOUND"
       }, status: :not_found
-      return
+      nil
     end
   end
 

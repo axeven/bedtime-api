@@ -13,7 +13,7 @@ module JsonResponder
       error_code: code
     }
     error_response[:details] = details unless details.empty?
-    
+
     render json: error_response, status: status
   end
 
@@ -41,5 +41,4 @@ module JsonResponder
   def render_internal_error(message = "Internal server error")
     render_error(message, "INTERNAL_ERROR", {}, :internal_server_error)
   end
-
 end

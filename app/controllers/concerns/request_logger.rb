@@ -13,7 +13,7 @@ module RequestLogger
     request_id = generate_request_id
     start_time = Time.current
     request_data = capture_request_data(request_id)
-    
+
     begin
       yield
     rescue => exception
@@ -37,7 +37,7 @@ module RequestLogger
       path: request.path,
       params: params.except(:controller, :action, :format).as_json,
       headers: {
-        user_id: request.headers['X-USER-ID'],
+        user_id: request.headers["X-USER-ID"],
         content_type: request.content_type,
         user_agent: request.user_agent
       }.compact,
@@ -54,7 +54,7 @@ module RequestLogger
 
   def log_complete_request(request_data, response_data, exception, start_time)
     duration_ms = ((Time.current - start_time) * 1000).round(2)
-    
+
     log_entry = {
       timestamp: Time.current.iso8601,
       type: "api_request",
@@ -85,7 +85,7 @@ module RequestLogger
   end
 
   def should_log?
-    Rails.env.development? || Rails.env.test? || ENV['ENABLE_REQUEST_LOGGING'] == 'true'
+    Rails.env.development? || Rails.env.test? || ENV["ENABLE_REQUEST_LOGGING"] == "true"
   end
 
   def should_log_response_body?(exception)
@@ -95,7 +95,7 @@ module RequestLogger
 
   def parse_response_body
     return nil unless response.body.present?
-    
+
     # Try to parse as JSON, fallback to string
     JSON.parse(response.body)
   rescue JSON::ParserError
