@@ -48,17 +48,6 @@ class Api::V1::SleepRecordsController < Api::V1::BaseController
   end
 
   def update
-    # Check if the sleep record belongs to the current user
-    unless @sleep_record.user == current_user
-      render_error(
-        "Sleep record not found",
-        "NOT_FOUND",
-        {},
-        :not_found
-      )
-      return
-    end
-
     # Check if the sleep record is active (can only clock out active sessions)
     unless @sleep_record.active?
       render_error(
@@ -153,18 +142,6 @@ class Api::V1::SleepRecordsController < Api::V1::BaseController
   end
 
   def destroy
-    # Check if the sleep record belongs to the current user
-    unless @sleep_record.user == current_user
-      render_error(
-        "Sleep record not found",
-        "NOT_FOUND",
-        {},
-        :not_found
-      )
-      return
-    end
-
-    # Delete the sleep record
     @sleep_record.destroy
     head :no_content
   end
@@ -172,7 +149,7 @@ class Api::V1::SleepRecordsController < Api::V1::BaseController
   private
 
   def set_sleep_record
-    @sleep_record = SleepRecord.find(params[:id])
+    @sleep_record = current_user.sleep_records.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_error(
       "Sleep record not found",

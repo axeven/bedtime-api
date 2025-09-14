@@ -29,13 +29,17 @@ RSpec.describe 'Concurrent Users API Workflow', type: :request do
     it 'maintains separate session states for different users' do
       # User 1 clocks in with bedtime 2 minutes ago to allow for valid clock-out
       post '/api/v1/sleep_records',
-        params: { bedtime: 2.minutes.ago.iso8601 },
+        params: { bedtime: 2.minutes.ago.iso8601 }.to_json,
         headers: { 'X-USER-ID' => user1.id.to_s, 'Content-Type' => 'application/json' }
+
+      expect(response).to have_http_status(:created)
       user1_session_id = JSON.parse(response.body)['id']
 
       # User 2 clocks in
       post '/api/v1/sleep_records',
         headers: { 'X-USER-ID' => user2.id.to_s, 'Content-Type' => 'application/json' }
+
+      expect(response).to have_http_status(:created)
       user2_session_id = JSON.parse(response.body)['id']
 
       # User 1 clocks out - current time will provide 2+ minute duration

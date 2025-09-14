@@ -222,7 +222,7 @@ RSpec.describe 'API Performance', type: :request do
 
       # Try to create overlapping session (should fail)
       post '/api/v1/sleep_records',
-        params: { bedtime: 1.hour.ago.iso8601 },
+        params: { bedtime: 1.hour.ago.iso8601 }.to_json,
         headers: { 'X-USER-ID' => user.id.to_s, 'Content-Type' => 'application/json' }
 
       # Debug if not 422

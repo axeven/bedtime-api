@@ -72,12 +72,13 @@ class SleepRecord < ApplicationRecord
     # Check for any overlapping sessions (active sessions or sessions that would overlap)
     # Simplified logic: sessions overlap if existing session starts at/before new bedtime
     # AND existing session is either active (wake_time IS NULL) OR ends after new bedtime
-    overlapping = user.sleep_records
-                     .where.not(id: id)
-                     .where(
-                       "bedtime <= ? AND (wake_time IS NULL OR wake_time > ?)",
-                       bedtime, bedtime
-                     )
+    overlapping_scope = user.sleep_records
+    overlapping_scope = overlapping_scope.where.not(id: id) if persisted?
+
+    overlapping = overlapping_scope.where(
+      "bedtime <= ? AND (wake_time IS NULL OR wake_time > ?)",
+      bedtime, bedtime
+    )
 
     if overlapping.exists?
       errors.add(:bedtime, "overlaps with an existing sleep session")
