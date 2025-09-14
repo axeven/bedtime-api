@@ -13,20 +13,15 @@ paths:
       summary: Clock in - Start sleep session
       tags:
       - Sleep Records
-      description: X-USER-ID header must be a valid integer
+      description: User already has an active sleep session
       parameters:
       - name: X-USER-ID
         in: header
-        type: string
         required: true
         description: User ID for authentication
         example: '1'
         schema:
           type: string
-          pattern: "^\\d+$"
-          minLength: 1
-      security:
-      - user_id_header: []
       responses:
         '201':
           description: Sleep session started successfully
@@ -68,42 +63,6 @@ paths:
                           active_since: '2024-01-15T20:00:00Z'
               schema:
                 "$ref": "#/components/schemas/ActiveSessionError"
-        '400':
-          description: Invalid user ID format
-          content:
-            application/json:
-              examples:
-                example_0:
-                  value:
-                    missing_header:
-                      summary: Missing X-USER-ID header
-                      description: The X-USER-ID header is required for this endpoint
-                      value:
-                        error: X-USER-ID header is required
-                        error_code: MISSING_USER_ID
-                    invalid_format:
-                      summary: Invalid user ID format
-                      description: User ID must be a positive integer
-                      value:
-                        error: Invalid user ID format
-                        error_code: INVALID_USER_ID
-              schema:
-                "$ref": "#/components/schemas/Error"
-        '404':
-          description: User not found
-          content:
-            application/json:
-              examples:
-                example_0:
-                  value:
-                    user_not_found:
-                      summary: User not found
-                      description: No user exists with the provided ID
-                      value:
-                        error: User not found
-                        error_code: USER_NOT_FOUND
-              schema:
-                "$ref": "#/components/schemas/Error"
       requestBody:
         content:
           application/json:
@@ -121,18 +80,15 @@ paths:
       summary: Get sleep history
       tags:
       - Sleep Records
-      description: X-USER-ID header must be a valid integer
+      description: Returns paginated list of user sleep records
       parameters:
       - name: X-USER-ID
         in: header
-        type: string
         required: true
         description: User ID for authentication
         example: '1'
         schema:
           type: string
-          pattern: "^\\d+$"
-          minLength: 1
       - name: limit
         in: query
         type: integer
@@ -166,8 +122,6 @@ paths:
         example: false
         schema:
           type: boolean
-      security:
-      - user_id_header: []
       responses:
         '200':
           description: Sleep history retrieved successfully
@@ -204,42 +158,6 @@ paths:
                           has_more: false
               schema:
                 "$ref": "#/components/schemas/SleepRecordsCollection"
-        '400':
-          description: Invalid user ID format
-          content:
-            application/json:
-              examples:
-                example_0:
-                  value:
-                    missing_header:
-                      summary: Missing X-USER-ID header
-                      description: The X-USER-ID header is required for this endpoint
-                      value:
-                        error: X-USER-ID header is required
-                        error_code: MISSING_USER_ID
-                    invalid_format:
-                      summary: Invalid user ID format
-                      description: User ID must be a positive integer
-                      value:
-                        error: Invalid user ID format
-                        error_code: INVALID_USER_ID
-              schema:
-                "$ref": "#/components/schemas/Error"
-        '404':
-          description: User not found
-          content:
-            application/json:
-              examples:
-                example_0:
-                  value:
-                    user_not_found:
-                      summary: User not found
-                      description: No user exists with the provided ID
-                      value:
-                        error: User not found
-                        error_code: USER_NOT_FOUND
-              schema:
-                "$ref": "#/components/schemas/Error"
   "/api/v1/sleep_records/{id}":
     parameters:
     - name: id
@@ -252,20 +170,15 @@ paths:
       summary: Clock out - End sleep session
       tags:
       - Sleep Records
-      description: X-USER-ID header must be a valid integer
+      description: Sleep record exists but is not active (already completed)
       parameters:
       - name: X-USER-ID
         in: header
-        type: string
         required: true
         description: User ID for authentication
         example: '1'
         schema:
           type: string
-          pattern: "^\\d+$"
-          minLength: 1
-      security:
-      - user_id_header: []
       responses:
         '200':
           description: Sleep session ended successfully
@@ -281,15 +194,15 @@ paths:
                         id: 1
                         user_id: 1
                         bedtime: '2024-01-15T22:30:00Z'
-                        wake_time: '2024-01-16T07:30:00Z'
-                        duration_minutes: 540
+                        wake_time: '2024-01-16T06:30:00Z'
+                        duration_minutes: 480
                         active: false
                         created_at: '2024-01-15T22:30:00Z'
-                        updated_at: '2024-01-16T07:30:00Z'
+                        updated_at: '2024-01-16T06:30:00Z'
               schema:
                 "$ref": "#/components/schemas/SleepRecord"
         '404':
-          description: User not found
+          description: Sleep record not found
           content:
             application/json:
               examples:
@@ -302,12 +215,6 @@ paths:
                       value:
                         error: Sleep record not found
                         error_code: NOT_FOUND
-                    user_not_found:
-                      summary: User not found
-                      description: No user exists with the provided ID
-                      value:
-                        error: User not found
-                        error_code: USER_NOT_FOUND
               schema:
                 "$ref": "#/components/schemas/Error"
         '422':
@@ -326,27 +233,6 @@ paths:
                         error_code: NO_ACTIVE_SESSION
               schema:
                 "$ref": "#/components/schemas/NoActiveSessionError"
-        '400':
-          description: Invalid user ID format
-          content:
-            application/json:
-              examples:
-                example_0:
-                  value:
-                    missing_header:
-                      summary: Missing X-USER-ID header
-                      description: The X-USER-ID header is required for this endpoint
-                      value:
-                        error: X-USER-ID header is required
-                        error_code: MISSING_USER_ID
-                    invalid_format:
-                      summary: Invalid user ID format
-                      description: User ID must be a positive integer
-                      value:
-                        error: Invalid user ID format
-                        error_code: INVALID_USER_ID
-              schema:
-                "$ref": "#/components/schemas/Error"
       requestBody:
         content:
           application/json:
@@ -364,20 +250,15 @@ paths:
       summary: Get specific sleep record
       tags:
       - Sleep Records
-      description: X-USER-ID header must be a valid integer
+      description: Sleep record does not exist or does not belong to user
       parameters:
       - name: X-USER-ID
         in: header
-        type: string
         required: true
         description: User ID for authentication
         example: '1'
         schema:
           type: string
-          pattern: "^\\d+$"
-          minLength: 1
-      security:
-      - user_id_header: []
       responses:
         '200':
           description: Sleep record retrieved successfully
@@ -386,94 +267,33 @@ paths:
               schema:
                 "$ref": "#/components/schemas/SleepRecord"
         '404':
-          description: User not found
+          description: Sleep record not found
           content:
             application/json:
-              schema:
-                "$ref": "#/components/schemas/Error"
-              examples:
-                example_0:
-                  value:
-                    user_not_found:
-                      summary: User not found
-                      description: No user exists with the provided ID
-                      value:
-                        error: User not found
-                        error_code: USER_NOT_FOUND
-        '400':
-          description: Invalid user ID format
-          content:
-            application/json:
-              examples:
-                example_0:
-                  value:
-                    missing_header:
-                      summary: Missing X-USER-ID header
-                      description: The X-USER-ID header is required for this endpoint
-                      value:
-                        error: X-USER-ID header is required
-                        error_code: MISSING_USER_ID
-                    invalid_format:
-                      summary: Invalid user ID format
-                      description: User ID must be a positive integer
-                      value:
-                        error: Invalid user ID format
-                        error_code: INVALID_USER_ID
               schema:
                 "$ref": "#/components/schemas/Error"
     delete:
       summary: Delete sleep record
       tags:
       - Sleep Records
-      description: X-USER-ID header must be a valid integer
+      description: Sleep record does not exist or does not belong to user
       parameters:
       - name: X-USER-ID
         in: header
-        type: string
         required: true
         description: User ID for authentication
         example: '1'
         schema:
           type: string
-          pattern: "^\\d+$"
-          minLength: 1
-      security:
-      - user_id_header: []
       responses:
         '204':
           description: Sleep record deleted successfully
         '404':
-          description: User not found
+          description: Sleep record not found
           content:
             application/json:
-              examples:
-                example_0:
-                  value:
-                    user_not_found:
-                      summary: User not found
-                      description: No user exists with the provided ID
-                      value:
-                        error: User not found
-                        error_code: USER_NOT_FOUND
-        '400':
-          description: Invalid user ID format
-          content:
-            application/json:
-              examples:
-                example_0:
-                  value:
-                    missing_header:
-                      summary: Missing X-USER-ID header
-                      description: The X-USER-ID header is required for this endpoint
-                      value:
-                        error: X-USER-ID header is required
-                        error_code: MISSING_USER_ID
-                    invalid_format:
-                      summary: Invalid user ID format
-                      description: User ID must be a positive integer
-                      value:
-                        error: Invalid user ID format
-                        error_code: INVALID_USER_ID
+              schema:
+                "$ref": "#/components/schemas/Error"
   "/api/v1/users":
     post:
       summary: Create a new user

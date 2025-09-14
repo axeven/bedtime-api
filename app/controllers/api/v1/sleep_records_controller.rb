@@ -52,9 +52,20 @@ class Api::V1::SleepRecordsController < Api::V1::BaseController
     unless @sleep_record.user == current_user
       render_error(
         "Sleep record not found",
-        "RECORD_NOT_FOUND",
+        "NOT_FOUND",
         {},
         :not_found
+      )
+      return
+    end
+
+    # Check if the sleep record is active (can only clock out active sessions)
+    unless @sleep_record.active?
+      render_error(
+        "No active sleep session found",
+        "NO_ACTIVE_SESSION",
+        {},
+        :unprocessable_entity
       )
       return
     end
@@ -146,7 +157,7 @@ class Api::V1::SleepRecordsController < Api::V1::BaseController
     unless @sleep_record.user == current_user
       render_error(
         "Sleep record not found",
-        "RECORD_NOT_FOUND",
+        "NOT_FOUND",
         {},
         :not_found
       )
@@ -165,7 +176,7 @@ class Api::V1::SleepRecordsController < Api::V1::BaseController
   rescue ActiveRecord::RecordNotFound
     render_error(
       "Sleep record not found",
-      "RECORD_NOT_FOUND",
+      "NOT_FOUND",
       {},
       :not_found
     )

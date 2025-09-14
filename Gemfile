@@ -51,7 +51,7 @@ group :development, :test do
   gem "factory_bot_rails"
 end
 
-group :development do
+group :development, :test do
   # rswag API documentation
   gem "rswag-api"
   gem "rswag-ui"

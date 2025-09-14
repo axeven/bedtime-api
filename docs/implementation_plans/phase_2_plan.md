@@ -32,19 +32,19 @@ This document provides a detailed implementation plan for Phase 2 of the Bedtime
 ### Tests to Write First
 **Note**: Use rswag specs for API documentation - templates available in `spec/support/sleep_record_schemas.rb`
 
-- [ ] SleepRecord model validation tests (standard RSpec)
-  - [ ] User association presence validation
-  - [ ] Bedtime presence validation
-  - [ ] Bedtime cannot be in future
-  - [ ] Wake_time cannot be before bedtime
-  - [ ] Duration calculation accuracy
-- [ ] SleepRecord model association tests (standard RSpec)
-  - [ ] Belongs to user relationship
-  - [ ] User has many sleep_records relationship
-- [ ] SleepRecord model business logic tests (standard RSpec)
-  - [ ] Active session detection (wake_time is nil)
-  - [ ] Completed session detection (both times present)
-  - [ ] Duration calculation in minutes
+- [x] SleepRecord model validation tests (standard RSpec)
+  - [x] User association presence validation
+  - [x] Bedtime presence validation
+  - [x] Bedtime cannot be in future
+  - [x] Wake_time cannot be before bedtime
+  - [x] Duration calculation accuracy
+- [x] SleepRecord model association tests (standard RSpec)
+  - [x] Belongs to user relationship
+  - [x] User has many sleep_records relationship
+- [x] SleepRecord model business logic tests (standard RSpec)
+  - [x] Active session detection (wake_time is nil)
+  - [x] Completed session detection (both times present)
+  - [x] Duration calculation in minutes
 
 ### Implementation Details
 ```ruby
@@ -122,7 +122,9 @@ end
 - **Model Created**: `app/models/sleep_record.rb` with full validations and business logic
 - **Migration Applied**: `20250914002853_create_sleep_records.rb` - creates table with proper indexes
 - **User Association**: Added `has_many :sleep_records, dependent: :destroy` to User model
-- **Test Coverage**: 18 passing tests covering all validations, scopes, and business logic
+- **Test Coverage**: 27 passing tests covering all validations, scopes, and business logic
+  - **SleepRecord Model**: 20 comprehensive tests covering validations, associations, scopes, and business methods
+  - **User Model**: 7 tests covering validations and bidirectional associations with dependent destroy
 - **Factories Created**: FactoryBot factories for User and SleepRecord with traits
 - **Database Schema**: Verified in `db/schema.rb` with correct columns and foreign keys
 

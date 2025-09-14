@@ -8,6 +8,18 @@ RSpec.describe SleepRecord, type: :model do
       sleep_record = SleepRecord.new
       expect(sleep_record).to respond_to(:user)
     end
+
+    it 'is invalid without a user' do
+      sleep_record = SleepRecord.new(bedtime: Time.current)
+      expect(sleep_record).not_to be_valid
+      expect(sleep_record.errors[:user]).to include("can't be blank")
+    end
+
+    it 'belongs to a specific user' do
+      user = create(:user)
+      sleep_record = create(:sleep_record, user: user)
+      expect(sleep_record.user).to eq(user)
+    end
   end
 
   describe 'validations' do
