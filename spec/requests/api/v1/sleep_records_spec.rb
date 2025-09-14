@@ -117,6 +117,134 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         end
       end
 
+      response(400, 'Missing authentication header') do
+        description 'X-USER-ID header is required'
+        schema '$ref' => '#/components/schemas/Error'
+
+        examples 'application/json' => {
+          missing_header: {
+            summary: 'Missing X-USER-ID header',
+            description: 'The X-USER-ID header is required for this endpoint',
+            value: {
+              error: 'X-USER-ID header is required',
+              error_code: 'MISSING_USER_ID'
+            }
+          }
+        }
+
+        let(:sleep_record) { {} }
+        let(:'X-USER-ID') { nil }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['error_code']).to eq('MISSING_USER_ID')
+        end
+      end
+
+      response(404, 'User not found') do
+        description 'The specified user ID does not exist'
+        schema '$ref' => '#/components/schemas/Error'
+
+        examples 'application/json' => {
+          user_not_found: {
+            summary: 'User not found',
+            description: 'No user exists with the provided ID',
+            value: {
+              error: 'User not found',
+              error_code: 'USER_NOT_FOUND'
+            }
+          }
+        }
+
+        let(:sleep_record) { {} }
+        let(:'X-USER-ID') { '999999' }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['error_code']).to eq('USER_NOT_FOUND')
+        end
+      end
+
+      response(404, 'Invalid user ID format') do
+        description 'X-USER-ID header with invalid format gets treated as user not found'
+        schema '$ref' => '#/components/schemas/Error'
+
+        examples 'application/json' => {
+          invalid_format: {
+            summary: 'Invalid user ID format',
+            description: 'User ID with invalid format gets treated as non-existent user',
+            value: {
+              error: 'User not found',
+              error_code: 'USER_NOT_FOUND'
+            }
+          }
+        }
+
+        let(:sleep_record) { {} }
+        let(:'X-USER-ID') { 'not-a-number' }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['error_code']).to eq('USER_NOT_FOUND')
+        end
+      end
+
+      response(422, 'Future bedtime validation error') do
+        description 'Bedtime cannot be in the future'
+        schema '$ref' => '#/components/schemas/Error'
+
+        examples 'application/json' => {
+          future_bedtime: {
+            summary: 'Future bedtime not allowed',
+            description: 'User provided a bedtime in the future',
+            value: {
+              error: 'Validation failed: Bedtime cannot be in the future',
+              error_code: 'VALIDATION_ERROR'
+            }
+          }
+        }
+
+        let(:sleep_record) { { bedtime: 1.hour.from_now.iso8601 } }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['error_code']).to eq('VALIDATION_ERROR')
+        end
+      end
+
+      response(201, 'Clock-in with custom bedtime') do
+        description 'Successfully creates sleep session with provided bedtime'
+        schema '$ref' => '#/components/schemas/SleepRecord'
+
+        examples 'application/json' => {
+          custom_bedtime: {
+            summary: 'Clock-in with specific bedtime',
+            description: 'User provided a specific bedtime for the sleep session',
+            value: {
+              id: 2,
+              user_id: 1,
+              bedtime: '2024-01-15T21:00:00Z',
+              wake_time: nil,
+              duration_minutes: nil,
+              active: true,
+              created_at: '2024-01-15T21:00:00Z',
+              updated_at: '2024-01-15T21:00:00Z'
+            }
+          }
+        }
+
+        let(:sleep_record) { { bedtime: 2.hours.ago.iso8601 } }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['user_id']).to eq(test_user.id)
+          expect(data['active']).to be true
+          expect(data['bedtime']).to be_present
+          expect(data['wake_time']).to be_nil
+          expect(data['duration_minutes']).to be_nil
+        end
+      end
+
     end
 
     get('Get sleep history') do

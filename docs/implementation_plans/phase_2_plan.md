@@ -144,15 +144,15 @@ end
 ### Tests to Write First
 **Note**: Create rswag spec at `spec/requests/api/v1/sleep_records_spec.rb` - template already exists
 
-- [ ] Clock-in rswag spec for POST `/api/v1/sleep_records`
-  - [ ] Document successful clock-in (201 response)
-  - [ ] Document active session conflict (422 response)
-  - [ ] Document authentication required (400 response)
-  - [ ] Document user not found (404 response)
-  - [ ] Include comprehensive examples using SleepRecordSchemas
-  - [ ] Test scenarios: valid bedtime, default bedtime, future bedtime validation
-- [ ] Use authentication helpers from `spec/support/authentication_helpers.rb`
-- [ ] Leverage existing schemas: ClockInRequest, SleepRecord, ActiveSessionError
+- [x] Clock-in rswag spec for POST `/api/v1/sleep_records`
+  - [x] Document successful clock-in (201 response)
+  - [x] Document active session conflict (422 response)
+  - [x] Document authentication required (400 response)
+  - [x] Document user not found (404 response)
+  - [x] Include comprehensive examples using SleepRecordSchemas
+  - [x] Test scenarios: valid bedtime, default bedtime, future bedtime validation
+- [x] Use authentication helpers from `spec/support/authentication_helpers.rb`
+- [x] Leverage existing schemas: ClockInRequest, SleepRecord, ActiveSessionError
 
 ### Implementation Details
 ```ruby
@@ -228,8 +228,12 @@ end
 - **Authentication**: X-USER-ID header validation implemented
 - **Business Logic**: Prevents multiple active sessions with proper error responses
 - **rswag Spec**: Comprehensive documentation at `spec/requests/api/v1/sleep_records_spec.rb`
+- **Test Coverage**: 7 comprehensive rswag scenarios for clock-in endpoint:
+  - **Success Cases**: Default bedtime (201), Custom bedtime (201)
+  - **Business Logic**: Active session conflict (422), Future bedtime validation (422)
+  - **Authentication**: Missing header (400), User not found (404), Invalid format (404)
 - **Manual Testing**: Verified with curl commands - all scenarios working
-- **Error Handling**: Returns proper error codes (ACTIVE_SESSION_EXISTS, etc.)
+- **Error Handling**: Returns proper error codes (ACTIVE_SESSION_EXISTS, MISSING_USER_ID, USER_NOT_FOUND, VALIDATION_ERROR)
 
 ---
 
