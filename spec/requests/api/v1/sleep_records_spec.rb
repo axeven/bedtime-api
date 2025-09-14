@@ -10,7 +10,9 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
   # Include authentication helpers
   include AuthenticationHelpers
 
+  # Define the test user and authentication header
   let(:test_user) { User.create!(name: 'Sleep Tester') }
+  let(:'X-USER-ID') { test_user.id.to_s }
 
   path '/api/v1/sleep_records' do
     post('Clock in - Start sleep session') do
@@ -69,8 +71,8 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
           }
         }
 
-        with_authenticated_user
         let(:sleep_record) { {} }
+        let(:'X-USER-ID') { test_user.id.to_s }
 
         run_test! do |response|
           data = JSON.parse(response.body)
@@ -101,8 +103,8 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
           }
         }
 
-        with_authenticated_user
         let(:sleep_record) { {} }
+        let(:'X-USER-ID') { test_user.id.to_s }
 
         before do
           # Create an active sleep session for the user
@@ -116,7 +118,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         end
       end
 
-      document_authentication_errors
     end
 
     get('Get sleep history') do
@@ -127,12 +128,19 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         **Query Parameters**:
         - Use `limit` and `offset` for pagination
         - Use `completed` filter to show only finished sleep sessions
-        - Use `active` filter to show only active sessions
+        - Use `active` filter to show only ongoing sleep sessions
 
-        **Response**:
-        - Returns array of sleep records sorted by bedtime (newest first)
-        - Includes pagination metadata
+        **Important Notes**:
+        - Results are ordered by bedtime descending (newest first)
+        - Pagination info includes current_page, total_pages, and total_records
+        - Both active and completed sleep sessions are returned by default
+
+        **Workflow**:
+        1. User calls this endpoint to view their sleep history
+        2. System returns paginated list of sleep records for the user
+        3. User can apply filters to narrow down results
       DESC
+      consumes 'application/json'
       produces 'application/json'
 
       requires_authentication
@@ -196,7 +204,7 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
           }
         }
 
-        with_authenticated_user
+        let(:'X-USER-ID') { test_user.id.to_s }
 
         before do
           # Create test sleep records
@@ -215,7 +223,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         end
       end
 
-      document_authentication_errors
     end
   end
 
@@ -259,7 +266,7 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         }
 
       response(200, 'Sleep session ended successfully') do
-        description 'Returns the updated sleep record with duration calculated'
+        description 'Returns the updated sleep record with active=false and duration calculated'
         schema '$ref' => '#/components/schemas/SleepRecord'
 
         examples 'application/json' => {
@@ -270,19 +277,19 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
               id: 1,
               user_id: 1,
               bedtime: '2024-01-15T22:30:00Z',
-              wake_time: '2024-01-16T07:30:00Z',
-              duration_minutes: 540,
+              wake_time: '2024-01-16T06:30:00Z',
+              duration_minutes: 480,
               active: false,
               created_at: '2024-01-15T22:30:00Z',
-              updated_at: '2024-01-16T07:30:00Z'
+              updated_at: '2024-01-16T06:30:00Z'
             }
           }
         }
 
-        with_authenticated_user
         let(:sleep_record) { {} }
         let(:id) { active_sleep_record.id }
         let(:active_sleep_record) { test_user.sleep_records.create!(bedtime: 8.hours.ago) }
+        let(:'X-USER-ID') { test_user.id.to_s }
 
         run_test! do |response|
           data = JSON.parse(response.body)
@@ -307,7 +314,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
           }
         }
 
-        with_authenticated_user
         let(:sleep_record) { {} }
         let(:id) { 999999 }
 
@@ -332,7 +338,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
           }
         }
 
-        with_authenticated_user
         let(:sleep_record) { {} }
         let(:id) { completed_sleep_record.id }
         let(:completed_sleep_record) do
@@ -348,7 +353,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         end
       end
 
-      document_authentication_errors
     end
 
     get('Get specific sleep record') do
@@ -368,7 +372,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         description 'Returns the requested sleep record'
         schema '$ref' => '#/components/schemas/SleepRecord'
 
-        with_authenticated_user
         let(:id) { sleep_record.id }
         let(:sleep_record) { test_user.sleep_records.create!(bedtime: 8.hours.ago) }
 
@@ -383,7 +386,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         description 'Sleep record does not exist or does not belong to user'
         schema '$ref' => '#/components/schemas/Error'
 
-        with_authenticated_user
         let(:id) { 999999 }
 
         run_test! do |response|
@@ -392,7 +394,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         end
       end
 
-      document_authentication_errors
     end
 
     delete('Delete sleep record') do
@@ -405,13 +406,13 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         - Deletion is permanent and cannot be undone
         - Returns 404 if record doesn't exist or belongs to another user
       DESC
+      produces 'application/json'
 
       requires_authentication
 
       response(204, 'Sleep record deleted successfully') do
         description 'Sleep record was successfully deleted'
 
-        with_authenticated_user
         let(:id) { sleep_record.id }
         let(:sleep_record) { test_user.sleep_records.create!(bedtime: 8.hours.ago) }
 
@@ -425,7 +426,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         description 'Sleep record does not exist or does not belong to user'
         schema '$ref' => '#/components/schemas/Error'
 
-        with_authenticated_user
         let(:id) { 999999 }
 
         run_test! do |response|
@@ -434,7 +434,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         end
       end
 
-      document_authentication_errors
     end
   end
 end

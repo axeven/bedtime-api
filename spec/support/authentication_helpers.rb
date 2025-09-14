@@ -14,8 +14,6 @@ module AuthenticationHelpers
                   pattern: '^\d+$',
                   minLength: 1
                 }
-
-      security [user_id_header: []]
     end
 
     # Add common authentication error responses
