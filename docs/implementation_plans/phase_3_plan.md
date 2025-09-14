@@ -5,10 +5,10 @@ This document provides a detailed implementation plan for Phase 3 of the Bedtime
 
 **Note**: This plan integrates the established rswag-based TDD approach. All API endpoints should be documented using rswag specs which automatically generate OpenAPI documentation. Authentication helpers and patterns are available in `spec/support/` directory.
 
-## Phase Status: ⬜ Not Started (0/6 steps completed)
+## Phase Status: 🟡 In Progress (1/6 steps completed)
 
 ### Progress Summary
-- ⬜ **Step 1**: Follow Model & Database Schema - **NOT STARTED**
+- ✅ **Step 1**: Follow Model & Database Schema - **COMPLETED**
 - ⬜ **Step 2**: Follow User API Endpoint - **NOT STARTED**
 - ⬜ **Step 3**: Unfollow User API Endpoint - **NOT STARTED**
 - ⬜ **Step 4**: Following List Retrieval Endpoint - **NOT STARTED**
@@ -21,30 +21,30 @@ This document provides a detailed implementation plan for Phase 3 of the Bedtime
 **Goal**: Create Follow model for user relationships with proper associations and constraints
 
 ### Tasks Checklist
-- [ ] Generate Follow model with proper columns
-- [ ] Create database migration with foreign keys and indexes
-- [ ] Add model validations and uniqueness constraints
-- [ ] Set up User associations (has_many follows, followers)
-- [ ] Add model scopes for following/followers queries
-- [ ] Run database migration and verify schema
+- [x] Generate Follow model with proper columns
+- [x] Create database migration with foreign keys and indexes
+- [x] Add model validations and uniqueness constraints
+- [x] Set up User associations (has_many follows, followers)
+- [x] Add model scopes for following/followers queries
+- [x] Run database migration and verify schema
 
 ### Tests to Write First
 **Note**: Use rswag specs for API documentation - create templates in `spec/support/follow_schemas.rb`
 
-- [ ] Follow model validation tests (standard RSpec)
-  - [ ] User (follower) presence validation
-  - [ ] Following user presence validation
-  - [ ] Prevent self-following
-  - [ ] Prevent duplicate follow relationships
-  - [ ] Unique constraint on [user_id, following_user_id]
-- [ ] Follow model association tests (standard RSpec)
-  - [ ] Belongs to user (follower)
-  - [ ] Belongs to following_user (followed user)
-  - [ ] User has many follows relationship
-  - [ ] User has many followers relationship
-- [ ] Follow model scope tests (standard RSpec)
-  - [ ] Following list for specific user
-  - [ ] Followers list for specific user
+- [x] Follow model validation tests (standard RSpec)
+  - [x] User (follower) presence validation
+  - [x] Following user presence validation
+  - [x] Prevent self-following
+  - [x] Prevent duplicate follow relationships
+  - [x] Unique constraint on [user_id, following_user_id]
+- [x] Follow model association tests (standard RSpec)
+  - [x] Belongs to user (follower)
+  - [x] Belongs to following_user (followed user)
+  - [x] User has many follows relationship
+  - [x] User has many followers relationship
+- [x] Follow model scope tests (standard RSpec)
+  - [x] Following list for specific user
+  - [x] Followers list for specific user
 
 ### Implementation Details
 ```ruby
@@ -119,11 +119,11 @@ end
 ```
 
 ### Acceptance Criteria
-- [ ] Follow model prevents self-following
-- [ ] Follow model prevents duplicate relationships
-- [ ] User model has proper associations to follows and followers
-- [ ] Database constraints enforce uniqueness
-- [ ] Model includes convenience methods for checking relationships
+- [x] Follow model prevents self-following
+- [x] Follow model prevents duplicate relationships
+- [x] User model has proper associations to follows and followers
+- [x] Database constraints enforce uniqueness
+- [x] Model includes convenience methods for checking relationships
 
 ---
 
