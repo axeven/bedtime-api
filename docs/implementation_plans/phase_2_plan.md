@@ -429,16 +429,16 @@ end
 ### Tests to Write First
 **Note**: Update existing rswag spec `spec/requests/api/v1/sleep_records_spec.rb`
 
-- [ ] Sleep history rswag spec for GET `/api/v1/sleep_records`
-  - [ ] Document successful sleep history retrieval (200 response)
-  - [ ] Document empty history (200 response with empty array)
-  - [ ] Document authentication required (400 response)
-  - [ ] Document user not found (404 response)
-  - [ ] Include comprehensive examples using SleepRecordSchemas
-  - [ ] Test scenarios: pagination (limit/offset), filtering (completed/active), ordering
-  - [ ] Document query parameters for filtering and pagination
-- [ ] Use authentication helpers for X-USER-ID requirement
-- [ ] Leverage existing schemas: SleepRecordsCollection, SleepRecord
+- [x] Sleep history rswag spec for GET `/api/v1/sleep_records`
+  - [x] Document successful sleep history retrieval (200 response)
+  - [x] Document empty history (200 response with empty array)
+  - [x] Document authentication required (400 response)
+  - [x] Document user not found (404 response)
+  - [x] Include comprehensive examples using SleepRecordSchemas
+  - [x] Test scenarios: pagination (limit/offset), filtering (completed/active), ordering
+  - [x] Document query parameters for filtering and pagination
+- [x] Use authentication helpers for X-USER-ID requirement
+- [x] Leverage existing schemas: SleepRecordsCollection, SleepRecord
 
 ### Implementation Details
 ```ruby
@@ -500,7 +500,14 @@ end
 - **Ordering**: Uses `recent_first` scope (bedtime desc)
 - **Authorization**: Users can only access their own sleep records
 - **Response Format**: Includes both sleep_records array and pagination metadata
+- **rswag Documentation**: Sleep history scenarios fully documented
+- **Test Coverage**: 6 comprehensive rswag scenarios for sleep history endpoint:
+  - **Success Cases**: Default sleep history (200), Empty history (200)
+  - **Feature Demos**: Paginated history (200), Active filter (200)
+  - **Authentication**: Missing header (400), User not found (404)
 - **Manual Testing**: Verified pagination and filtering work correctly
+- **Error Handling**: Returns proper error codes (MISSING_USER_ID, USER_NOT_FOUND)
+- **Query Parameters**: All filtering and pagination parameters fully documented
 
 ---
 

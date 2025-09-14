@@ -350,6 +350,187 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         end
       end
 
+      response(200, 'Empty sleep history retrieved successfully') do
+        description 'Returns empty array when user has no sleep records'
+        schema '$ref' => '#/components/schemas/SleepRecordsCollection'
+
+        examples 'application/json' => {
+          empty_history: {
+            summary: 'Empty sleep history',
+            description: 'User has no sleep records yet',
+            value: {
+              sleep_records: [],
+              pagination: {
+                total_count: 0,
+                limit: 20,
+                offset: 0,
+                has_more: false
+              }
+            }
+          }
+        }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['sleep_records']).to be_an(Array)
+          expect(data['sleep_records']).to be_empty
+          expect(data['pagination']['total_count']).to eq(0)
+        end
+      end
+
+      response(400, 'Missing authentication header') do
+        description 'X-USER-ID header is required'
+        schema '$ref' => '#/components/schemas/Error'
+
+        examples 'application/json' => {
+          missing_header: {
+            summary: 'Missing X-USER-ID header',
+            description: 'The X-USER-ID header is required for this endpoint',
+            value: {
+              error: 'X-USER-ID header is required',
+              error_code: 'MISSING_USER_ID'
+            }
+          }
+        }
+
+        let(:'X-USER-ID') { nil }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['error_code']).to eq('MISSING_USER_ID')
+        end
+      end
+
+      response(404, 'User not found') do
+        description 'The specified user ID does not exist'
+        schema '$ref' => '#/components/schemas/Error'
+
+        examples 'application/json' => {
+          user_not_found: {
+            summary: 'User not found',
+            description: 'No user exists with the provided ID',
+            value: {
+              error: 'User not found',
+              error_code: 'USER_NOT_FOUND'
+            }
+          }
+        }
+
+        let(:'X-USER-ID') { '999999' }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['error_code']).to eq('USER_NOT_FOUND')
+        end
+      end
+
+      response(200, 'Paginated sleep history') do
+        description 'Returns sleep records with pagination and filtering'
+        schema '$ref' => '#/components/schemas/SleepRecordsCollection'
+
+        examples 'application/json' => {
+          paginated_history: {
+            summary: 'Paginated and filtered sleep history',
+            description: 'Sleep history with limit/offset and completed filter',
+            value: {
+              sleep_records: [
+                {
+                  id: 3,
+                  user_id: 1,
+                  bedtime: '2024-01-17T23:00:00Z',
+                  wake_time: '2024-01-18T07:00:00Z',
+                  duration_minutes: 480,
+                  active: false,
+                  created_at: '2024-01-17T23:00:00Z',
+                  updated_at: '2024-01-18T07:00:00Z'
+                }
+              ],
+              pagination: {
+                total_count: 5,
+                limit: 1,
+                offset: 2,
+                has_more: true
+              }
+            }
+          }
+        }
+
+        let(:limit) { 1 }
+        let(:offset) { 2 }
+        let(:completed) { true }
+
+        before do
+          # Create multiple sleep records for pagination testing
+          5.times do |i|
+            test_user.sleep_records.create!(
+              bedtime: (i+1).days.ago,
+              wake_time: (i+1).days.ago + 8.hours
+            )
+          end
+        end
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['sleep_records']).to be_an(Array)
+          expect(data['sleep_records'].length).to be <= 1
+          expect(data['pagination']['limit']).to eq(1)
+          expect(data['pagination']['offset']).to eq(2)
+          expect(data['pagination']['has_more']).to eq(true)
+        end
+      end
+
+      response(200, 'Active sessions only filter') do
+        description 'Returns only active sleep sessions using active filter'
+        schema '$ref' => '#/components/schemas/SleepRecordsCollection'
+
+        examples 'application/json' => {
+          active_only: {
+            summary: 'Active sessions filter',
+            description: 'Only returns currently active sleep sessions',
+            value: {
+              sleep_records: [
+                {
+                  id: 1,
+                  user_id: 1,
+                  bedtime: '2024-01-18T22:00:00Z',
+                  wake_time: nil,
+                  duration_minutes: nil,
+                  active: true,
+                  created_at: '2024-01-18T22:00:00Z',
+                  updated_at: '2024-01-18T22:00:00Z'
+                }
+              ],
+              pagination: {
+                total_count: 1,
+                limit: 20,
+                offset: 0,
+                has_more: false
+              }
+            }
+          }
+        }
+
+        let(:active) { true }
+
+        before do
+          # Create mix of active and completed sessions
+          test_user.sleep_records.create!(
+            bedtime: 2.days.ago,
+            wake_time: 2.days.ago + 8.hours
+          )
+          test_user.sleep_records.create!(bedtime: 1.hour.ago)
+        end
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['sleep_records']).to be_an(Array)
+          data['sleep_records'].each do |record|
+            expect(record['active']).to be true
+            expect(record['wake_time']).to be_nil
+          end
+        end
+      end
+
     end
   end
 
