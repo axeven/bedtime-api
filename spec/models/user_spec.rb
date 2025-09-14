@@ -40,7 +40,7 @@ RSpec.describe User, type: :model do
     end
 
     it 'can have multiple sleep_records' do
-      sleep_record1 = create(:sleep_record, user: user, bedtime: 2.days.ago)
+      sleep_record1 = create(:sleep_record, user: user, bedtime: 2.days.ago, wake_time: 2.days.ago + 8.hours)
       sleep_record2 = create(:sleep_record, user: user, bedtime: 1.day.ago)
 
       expect(user.sleep_records).to include(sleep_record1, sleep_record2)

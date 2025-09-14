@@ -13,7 +13,7 @@ paths:
       summary: Clock in - Start sleep session
       tags:
       - Sleep Records
-      description: User already has an active sleep session
+      description: Successfully creates sleep session with provided bedtime
       parameters:
       - name: X-USER-ID
         in: header
@@ -24,7 +24,7 @@ paths:
           type: string
       responses:
         '201':
-          description: Sleep session started successfully
+          description: Clock-in with custom bedtime
           content:
             application/json:
               examples:
@@ -42,10 +42,23 @@ paths:
                         active: true
                         created_at: '2024-01-15T22:30:00Z'
                         updated_at: '2024-01-15T22:30:00Z'
+                    custom_bedtime:
+                      summary: Clock-in with specific bedtime
+                      description: User provided a specific bedtime for the sleep
+                        session
+                      value:
+                        id: 2
+                        user_id: 1
+                        bedtime: '2024-01-15T21:00:00Z'
+                        wake_time:
+                        duration_minutes:
+                        active: true
+                        created_at: '2024-01-15T21:00:00Z'
+                        updated_at: '2024-01-15T21:00:00Z'
               schema:
                 "$ref": "#/components/schemas/SleepRecord"
         '422':
-          description: Active session already exists
+          description: Future bedtime validation error
           content:
             application/json:
               examples:
@@ -61,8 +74,51 @@ paths:
                         details:
                           active_session_id: 5
                           active_since: '2024-01-15T20:00:00Z'
+                    future_bedtime:
+                      summary: Future bedtime not allowed
+                      description: User provided a bedtime in the future
+                      value:
+                        error: 'Validation failed: Bedtime cannot be in the future'
+                        error_code: VALIDATION_ERROR
               schema:
-                "$ref": "#/components/schemas/ActiveSessionError"
+                "$ref": "#/components/schemas/Error"
+        '400':
+          description: Missing authentication header
+          content:
+            application/json:
+              examples:
+                example_0:
+                  value:
+                    missing_header:
+                      summary: Missing X-USER-ID header
+                      description: The X-USER-ID header is required for this endpoint
+                      value:
+                        error: X-USER-ID header is required
+                        error_code: MISSING_USER_ID
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '404':
+          description: Invalid user ID format
+          content:
+            application/json:
+              examples:
+                example_0:
+                  value:
+                    user_not_found:
+                      summary: User not found
+                      description: No user exists with the provided ID
+                      value:
+                        error: User not found
+                        error_code: USER_NOT_FOUND
+                    invalid_format:
+                      summary: Invalid user ID format
+                      description: User ID with invalid format gets treated as non-existent
+                        user
+                      value:
+                        error: User not found
+                        error_code: USER_NOT_FOUND
+              schema:
+                "$ref": "#/components/schemas/Error"
       requestBody:
         content:
           application/json:
@@ -80,7 +136,7 @@ paths:
       summary: Get sleep history
       tags:
       - Sleep Records
-      description: Returns paginated list of user sleep records
+      description: Returns only active sleep sessions using active filter
       parameters:
       - name: X-USER-ID
         in: header
@@ -124,7 +180,7 @@ paths:
           type: boolean
       responses:
         '200':
-          description: Sleep history retrieved successfully
+          description: Active sessions only filter
           content:
             application/json:
               examples:
@@ -156,8 +212,156 @@ paths:
                           limit: 20
                           offset: 0
                           has_more: false
+                    empty_history:
+                      summary: Empty sleep history
+                      description: User has no sleep records yet
+                      value:
+                        sleep_records: []
+                        pagination:
+                          total_count: 0
+                          limit: 20
+                          offset: 0
+                          has_more: false
+                    paginated_history:
+                      summary: Paginated and filtered sleep history
+                      description: Sleep history with limit/offset and completed filter
+                      value:
+                        sleep_records:
+                        - id: 3
+                          user_id: 1
+                          bedtime: '2024-01-17T23:00:00Z'
+                          wake_time: '2024-01-18T07:00:00Z'
+                          duration_minutes: 480
+                          active: false
+                          created_at: '2024-01-17T23:00:00Z'
+                          updated_at: '2024-01-18T07:00:00Z'
+                        pagination:
+                          total_count: 5
+                          limit: 1
+                          offset: 2
+                          has_more: true
+                    active_only:
+                      summary: Active sessions filter
+                      description: Only returns currently active sleep sessions
+                      value:
+                        sleep_records:
+                        - id: 1
+                          user_id: 1
+                          bedtime: '2024-01-18T22:00:00Z'
+                          wake_time:
+                          duration_minutes:
+                          active: true
+                          created_at: '2024-01-18T22:00:00Z'
+                          updated_at: '2024-01-18T22:00:00Z'
+                        pagination:
+                          total_count: 1
+                          limit: 20
+                          offset: 0
+                          has_more: false
               schema:
                 "$ref": "#/components/schemas/SleepRecordsCollection"
+        '400':
+          description: Missing authentication header
+          content:
+            application/json:
+              examples:
+                example_0:
+                  value:
+                    missing_header:
+                      summary: Missing X-USER-ID header
+                      description: The X-USER-ID header is required for this endpoint
+                      value:
+                        error: X-USER-ID header is required
+                        error_code: MISSING_USER_ID
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              examples:
+                example_0:
+                  value:
+                    user_not_found:
+                      summary: User not found
+                      description: No user exists with the provided ID
+                      value:
+                        error: User not found
+                        error_code: USER_NOT_FOUND
+              schema:
+                "$ref": "#/components/schemas/Error"
+  "/api/v1/sleep_records/current":
+    get:
+      summary: Get current active session
+      tags:
+      - Sleep Records
+      description: The specified user ID does not exist
+      parameters:
+      - name: X-USER-ID
+        in: header
+        required: true
+        description: User ID for authentication
+        example: '1'
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Current active session retrieved successfully
+          content:
+            application/json:
+              examples:
+                example_0:
+                  value:
+                    active_session:
+                      summary: Current active session
+                      description: User has an active sleep session in progress
+                      value:
+                        id: 1
+                        user_id: 1
+                        bedtime: '2024-01-15T22:30:00Z'
+                        wake_time:
+                        duration_minutes:
+                        active: true
+                        created_at: '2024-01-15T22:30:00Z'
+                        updated_at: '2024-01-15T22:30:00Z'
+              schema:
+                "$ref": "#/components/schemas/SleepRecord"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              examples:
+                example_0:
+                  value:
+                    no_active_session:
+                      summary: No active session
+                      description: User currently has no active sleep session
+                      value:
+                        error: No active sleep session found
+                        error_code: NO_ACTIVE_SESSION
+                    user_not_found:
+                      summary: User not found
+                      description: No user exists with the provided ID
+                      value:
+                        error: User not found
+                        error_code: USER_NOT_FOUND
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '400':
+          description: Missing authentication header
+          content:
+            application/json:
+              examples:
+                example_0:
+                  value:
+                    missing_header:
+                      summary: Missing X-USER-ID header
+                      description: The X-USER-ID header is required for this endpoint
+                      value:
+                        error: X-USER-ID header is required
+                        error_code: MISSING_USER_ID
+              schema:
+                "$ref": "#/components/schemas/Error"
   "/api/v1/sleep_records/{id}":
     parameters:
     - name: id
@@ -170,7 +374,7 @@ paths:
       summary: Clock out - End sleep session
       tags:
       - Sleep Records
-      description: Sleep record exists but is not active (already completed)
+      description: Wake time cannot be before bedtime
       parameters:
       - name: X-USER-ID
         in: header
@@ -181,7 +385,7 @@ paths:
           type: string
       responses:
         '200':
-          description: Sleep session ended successfully
+          description: Clock-out with custom wake time
           content:
             application/json:
               examples:
@@ -199,10 +403,23 @@ paths:
                         active: false
                         created_at: '2024-01-15T22:30:00Z'
                         updated_at: '2024-01-16T06:30:00Z'
+                    custom_wake_time:
+                      summary: Clock-out with specific wake time
+                      description: User provided a specific wake time for the sleep
+                        session
+                      value:
+                        id: 2
+                        user_id: 1
+                        bedtime: '2024-01-15T22:00:00Z'
+                        wake_time: '2024-01-16T07:00:00Z'
+                        duration_minutes: 540
+                        active: false
+                        created_at: '2024-01-15T22:00:00Z'
+                        updated_at: '2024-01-16T07:00:00Z'
               schema:
                 "$ref": "#/components/schemas/SleepRecord"
         '404':
-          description: Sleep record not found
+          description: User not found
           content:
             application/json:
               examples:
@@ -215,10 +432,16 @@ paths:
                       value:
                         error: Sleep record not found
                         error_code: NOT_FOUND
+                    user_not_found:
+                      summary: User not found
+                      description: No user exists with the provided ID
+                      value:
+                        error: User not found
+                        error_code: USER_NOT_FOUND
               schema:
                 "$ref": "#/components/schemas/Error"
         '422':
-          description: No active sleep session
+          description: Invalid wake time validation
           content:
             application/json:
               examples:
@@ -231,8 +454,29 @@ paths:
                       value:
                         error: No active sleep session found
                         error_code: NO_ACTIVE_SESSION
+                    invalid_wake_time:
+                      summary: Wake time before bedtime
+                      description: User provided wake time that is before the bedtime
+                      value:
+                        error: 'Validation failed: Wake time must be after bedtime'
+                        error_code: VALIDATION_ERROR
               schema:
-                "$ref": "#/components/schemas/NoActiveSessionError"
+                "$ref": "#/components/schemas/Error"
+        '400':
+          description: Missing authentication header
+          content:
+            application/json:
+              examples:
+                example_0:
+                  value:
+                    missing_header:
+                      summary: Missing X-USER-ID header
+                      description: The X-USER-ID header is required for this endpoint
+                      value:
+                        error: X-USER-ID header is required
+                        error_code: MISSING_USER_ID
+              schema:
+                "$ref": "#/components/schemas/Error"
       requestBody:
         content:
           application/json:

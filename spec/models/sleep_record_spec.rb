@@ -146,6 +146,195 @@ RSpec.describe SleepRecord, type: :model do
 
         expect(sleep_record.duration_minutes).to eq(465) # 7.75 * 60 = 465 minutes
       end
+
+      it 'handles short naps (under 1 hour)' do
+        bedtime = Time.parse('2024-01-15 14:00:00')
+        wake_time = Time.parse('2024-01-15 14:30:00') # 30 minutes later
+        sleep_record = SleepRecord.new(user: user, bedtime: bedtime, wake_time: wake_time)
+
+        expect(sleep_record.duration_minutes).to eq(30)
+      end
+
+      it 'handles long sleep sessions (over 12 hours)' do
+        bedtime = Time.parse('2024-01-15 20:00:00')
+        wake_time = Time.parse('2024-01-16 10:00:00') # 14 hours later
+        sleep_record = SleepRecord.new(user: user, bedtime: bedtime, wake_time: wake_time)
+
+        expect(sleep_record.duration_minutes).to eq(840) # 14 * 60 = 840 minutes
+      end
+
+      it 'handles exactly midnight bedtime/wake times' do
+        bedtime = Time.parse('2024-01-15 00:00:00')
+        wake_time = Time.parse('2024-01-16 00:00:00') # Exactly 24 hours later
+        sleep_record = SleepRecord.new(user: user, bedtime: bedtime, wake_time: wake_time)
+
+        expect(sleep_record.duration_minutes).to eq(1440) # 24 * 60 = 1440 minutes
+      end
+    end
+  end
+
+  describe 'business rule validations' do
+    describe 'reasonable duration validation' do
+      it 'rejects sleep duration over 24 hours' do
+        bedtime = Time.parse('2024-01-15 22:00:00')
+        wake_time = bedtime + 25.hours # 25 hours later
+        sleep_record = SleepRecord.new(user: user, bedtime: bedtime, wake_time: wake_time)
+
+        expect(sleep_record.save).to be false
+        expect(sleep_record.errors[:wake_time]).to include("sleep duration cannot exceed 24 hours")
+      end
+
+      it 'rejects sleep duration under 1 minute' do
+        bedtime = Time.parse('2024-01-15 22:00:00')
+        wake_time = bedtime + 10.seconds # 10 seconds later - rounds to 0 minutes
+        sleep_record = SleepRecord.new(user: user, bedtime: bedtime, wake_time: wake_time)
+
+        expect(sleep_record.save).to be false
+        expect(sleep_record.errors[:wake_time]).to include("sleep duration must be at least 1 minute")
+      end
+
+      it 'allows reasonable sleep durations' do
+        bedtime = Time.parse('2024-01-15 22:00:00')
+        wake_time = bedtime + 8.hours # 8 hours later
+        sleep_record = SleepRecord.new(user: user, bedtime: bedtime, wake_time: wake_time)
+
+        expect(sleep_record).to be_valid
+      end
+    end
+
+    describe 'overlapping sessions validation' do
+      it 'prevents creating overlapping sessions' do
+        # Create first session: 10 PM - 6 AM
+        existing_session = create(:sleep_record,
+          user: user,
+          bedtime: Time.parse('2024-01-15 22:00:00'),
+          wake_time: Time.parse('2024-01-16 06:00:00')
+        )
+
+        # Try to create overlapping session: 11 PM - 7 AM (overlaps with existing)
+        overlapping_session = SleepRecord.new(
+          user: user,
+          bedtime: Time.parse('2024-01-15 23:00:00')
+        )
+
+        expect(overlapping_session).not_to be_valid
+        expect(overlapping_session.errors[:bedtime]).to include("overlaps with an existing sleep session")
+      end
+
+      it 'prevents creating session that overlaps with active session' do
+        # Create active session starting at 10 PM
+        create(:sleep_record, user: user, bedtime: Time.parse('2024-01-15 22:00:00'), wake_time: nil)
+
+        # Try to create session starting at 11 PM (overlaps with active session)
+        overlapping_session = SleepRecord.new(
+          user: user,
+          bedtime: Time.parse('2024-01-15 23:00:00')
+        )
+
+        expect(overlapping_session).not_to be_valid
+        expect(overlapping_session.errors[:bedtime]).to include("overlaps with an existing sleep session")
+      end
+
+      it 'allows non-overlapping sessions' do
+        # Create first session: 10 PM - 6 AM
+        create(:sleep_record,
+          user: user,
+          bedtime: Time.parse('2024-01-15 22:00:00'),
+          wake_time: Time.parse('2024-01-16 06:00:00')
+        )
+
+        # Create non-overlapping session: 7 AM - 3 PM (after first session ends)
+        non_overlapping_session = SleepRecord.new(
+          user: user,
+          bedtime: Time.parse('2024-01-16 07:00:00')
+        )
+
+        expect(non_overlapping_session).to be_valid
+      end
+
+      it 'allows same user to have sessions on different days' do
+        # Create session on day 1
+        create(:sleep_record,
+          user: user,
+          bedtime: Time.parse('2024-01-15 22:00:00'),
+          wake_time: Time.parse('2024-01-16 06:00:00')
+        )
+
+        # Create session on day 2 (completely separate)
+        next_day_session = SleepRecord.new(
+          user: user,
+          bedtime: Time.parse('2024-01-16 22:00:00')
+        )
+
+        expect(next_day_session).to be_valid
+      end
+
+      it 'allows different users to have overlapping sessions' do
+        other_user = create(:user, name: 'Other User')
+
+        # Create session for first user
+        create(:sleep_record,
+          user: user,
+          bedtime: Time.parse('2024-01-15 22:00:00'),
+          wake_time: nil
+        )
+
+        # Create overlapping session for different user (should be allowed)
+        other_user_session = SleepRecord.new(
+          user: other_user,
+          bedtime: Time.parse('2024-01-15 23:00:00')
+        )
+
+        expect(other_user_session).to be_valid
+      end
+    end
+  end
+
+  describe 'callback tests' do
+    describe 'calculate_duration callback' do
+      it 'automatically calculates duration on wake_time update' do
+        bedtime = 8.hours.ago
+        sleep_record = create(:sleep_record, user: user, bedtime: bedtime, wake_time: nil)
+
+        expect(sleep_record.duration_minutes).to be_nil
+
+        wake_time = 2.hours.ago
+        sleep_record.update!(wake_time: wake_time)
+        sleep_record.reload
+
+        expected_duration = ((wake_time - bedtime) / 60).round
+        expect(sleep_record.duration_minutes).to eq(expected_duration)
+      end
+
+      it 'updates duration when wake_time changes' do
+        bedtime = 8.hours.ago
+        initial_wake_time = 4.hours.ago
+        sleep_record = create(:sleep_record, user: user, bedtime: bedtime, wake_time: initial_wake_time)
+
+        initial_duration = sleep_record.duration_minutes
+        expect(initial_duration).to be > 0
+
+        new_wake_time = 2.hours.ago
+        sleep_record.update!(wake_time: new_wake_time)
+        sleep_record.reload
+
+        new_duration = sleep_record.duration_minutes
+        expect(new_duration).not_to eq(initial_duration)
+        expect(new_duration).to eq(((new_wake_time - bedtime) / 60).round)
+      end
+
+      it 'sets duration to nil when wake_time is removed' do
+        bedtime = 8.hours.ago
+        wake_time = 2.hours.ago
+        sleep_record = create(:sleep_record, user: user, bedtime: bedtime, wake_time: wake_time)
+
+        expect(sleep_record.duration_minutes).to be > 0
+
+        sleep_record.update!(wake_time: nil)
+        sleep_record.reload
+
+        expect(sleep_record.duration_minutes).to be_nil
+      end
     end
   end
 end
