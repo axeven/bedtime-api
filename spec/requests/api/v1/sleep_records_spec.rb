@@ -244,7 +244,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
           expect(data['duration_minutes']).to be_nil
         end
       end
-
     end
 
     get('Get sleep history') do
@@ -530,7 +529,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
           end
         end
       end
-
     end
   end
 
@@ -657,7 +655,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
           expect(data['error_code']).to eq('USER_NOT_FOUND')
         end
       end
-
     end
   end
 
@@ -895,7 +892,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
           expect(data['error_code']).to eq('VALIDATION_ERROR')
         end
       end
-
     end
 
     get('Get specific sleep record') do
@@ -938,7 +934,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
           expect(data['error_code']).to eq('NOT_FOUND')
         end
       end
-
     end
 
     delete('Delete sleep record') do
@@ -980,7 +975,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
           expect(data['error_code']).to eq('NOT_FOUND')
         end
       end
-
     end
   end
 end

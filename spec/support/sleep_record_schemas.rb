@@ -51,7 +51,7 @@ module SleepRecordSchemas
           example: '2024-01-16T07:30:00Z'
         }
       },
-      required: ['id', 'user_id', 'bedtime', 'active', 'created_at', 'updated_at'],
+      required: [ 'id', 'user_id', 'bedtime', 'active', 'created_at', 'updated_at' ],
       additionalProperties: false
     }
   end
@@ -94,11 +94,11 @@ module SleepRecordSchemas
               example: true
             }
           },
-          required: ['total_count', 'limit', 'offset', 'has_more'],
+          required: [ 'total_count', 'limit', 'offset', 'has_more' ],
           additionalProperties: false
         }
       },
-      required: ['sleep_records', 'pagination'],
+      required: [ 'sleep_records', 'pagination' ],
       additionalProperties: false
     }
   end
@@ -169,11 +169,11 @@ module SleepRecordSchemas
               example: '2024-01-15T22:30:00Z'
             }
           },
-          required: ['active_session_id'],
+          required: [ 'active_session_id' ],
           additionalProperties: false
         }
       },
-      required: ['error', 'error_code', 'details'],
+      required: [ 'error', 'error_code', 'details' ],
       additionalProperties: false
     }
   end
@@ -193,7 +193,7 @@ module SleepRecordSchemas
           example: 'NO_ACTIVE_SESSION'
         }
       },
-      required: ['error', 'error_code'],
+      required: [ 'error', 'error_code' ],
       additionalProperties: false
     }
   end
