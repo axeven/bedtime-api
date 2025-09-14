@@ -353,15 +353,15 @@ end
 ### Tests to Write First
 **Note**: Update existing rswag spec `spec/requests/api/v1/sleep_records_spec.rb`
 
-- [ ] Current session rswag spec for GET `/api/v1/sleep_records/current`
-  - [ ] Document successful active session retrieval (200 response)
-  - [ ] Document no active session found (404 response)
-  - [ ] Document authentication required (400 response)
-  - [ ] Document user not found (404 response)
-  - [ ] Include comprehensive examples using SleepRecordSchemas
-  - [ ] Test scenarios: active session exists, no active session, user authorization
-- [ ] Use authentication helpers for X-USER-ID requirement
-- [ ] Leverage existing schemas: SleepRecord, NoActiveSessionError
+- [x] Current session rswag spec for GET `/api/v1/sleep_records/current`
+  - [x] Document successful active session retrieval (200 response)
+  - [x] Document no active session found (404 response)
+  - [x] Document authentication required (400 response)
+  - [x] Document user not found (404 response)
+  - [x] Include comprehensive examples using SleepRecordSchemas
+  - [x] Test scenarios: active session exists, no active session, user authorization
+- [x] Use authentication helpers for X-USER-ID requirement
+- [x] Leverage existing schemas: SleepRecord, NoActiveSessionError
 
 ### Implementation Details
 ```ruby
@@ -405,7 +405,13 @@ end
 - **Route Added**: Collection route `/api/v1/sleep_records/current`
 - **Error Handling**: Returns NO_ACTIVE_SESSION error when no active session found
 - **Authentication**: X-USER-ID header required and validated
+- **rswag Documentation**: Current session scenarios fully documented
+- **Test Coverage**: 4 comprehensive rswag scenarios for current session endpoint:
+  - **Success Case**: Active session retrieved successfully (200)
+  - **Business Logic**: No active session found (404)
+  - **Authentication**: Missing header (400), User not found (404)
 - **Manual Testing**: Verified with curl commands
+- **Error Handling**: Returns proper error codes (NO_ACTIVE_SESSION, MISSING_USER_ID, USER_NOT_FOUND)
 
 ---
 

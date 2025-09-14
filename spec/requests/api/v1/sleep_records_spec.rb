@@ -353,6 +353,133 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
     end
   end
 
+  path '/api/v1/sleep_records/current' do
+    get('Get current active session') do
+      tags 'Sleep Records'
+      description <<~DESC
+        Retrieves the authenticated user's current active sleep session.
+
+        **Important Notes**:
+        - Returns the active sleep session if one exists
+        - Returns 404 if no active sleep session is found
+        - Only returns sessions where wake_time is null (active=true)
+
+        **Workflow**:
+        1. User calls this endpoint to check their current sleep status
+        2. System looks for active sleep session for the user
+        3. Returns session data or appropriate error message
+      DESC
+      produces 'application/json'
+
+      parameter name: 'X-USER-ID', in: :header, type: :string, required: true,
+                description: 'User ID for authentication',
+                example: '1'
+
+      response(200, 'Current active session retrieved successfully') do
+        description 'Returns the active sleep record'
+        schema '$ref' => '#/components/schemas/SleepRecord'
+
+        examples 'application/json' => {
+          active_session: {
+            summary: 'Current active session',
+            description: 'User has an active sleep session in progress',
+            value: {
+              id: 1,
+              user_id: 1,
+              bedtime: '2024-01-15T22:30:00Z',
+              wake_time: nil,
+              duration_minutes: nil,
+              active: true,
+              created_at: '2024-01-15T22:30:00Z',
+              updated_at: '2024-01-15T22:30:00Z'
+            }
+          }
+        }
+
+        before do
+          # Create an active sleep session for the user
+          test_user.sleep_records.create!(bedtime: 2.hours.ago)
+        end
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['user_id']).to eq(test_user.id)
+          expect(data['active']).to be true
+          expect(data['wake_time']).to be_nil
+          expect(data['duration_minutes']).to be_nil
+        end
+      end
+
+      response(404, 'No active session found') do
+        description 'User has no active sleep session'
+        schema '$ref' => '#/components/schemas/NoActiveSessionError'
+
+        examples 'application/json' => {
+          no_active_session: {
+            summary: 'No active session',
+            description: 'User currently has no active sleep session',
+            value: {
+              error: 'No active sleep session found',
+              error_code: 'NO_ACTIVE_SESSION'
+            }
+          }
+        }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['error_code']).to eq('NO_ACTIVE_SESSION')
+        end
+      end
+
+      response(400, 'Missing authentication header') do
+        description 'X-USER-ID header is required'
+        schema '$ref' => '#/components/schemas/Error'
+
+        examples 'application/json' => {
+          missing_header: {
+            summary: 'Missing X-USER-ID header',
+            description: 'The X-USER-ID header is required for this endpoint',
+            value: {
+              error: 'X-USER-ID header is required',
+              error_code: 'MISSING_USER_ID'
+            }
+          }
+        }
+
+        let(:'X-USER-ID') { nil }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['error_code']).to eq('MISSING_USER_ID')
+        end
+      end
+
+      response(404, 'User not found') do
+        description 'The specified user ID does not exist'
+        schema '$ref' => '#/components/schemas/Error'
+
+        examples 'application/json' => {
+          user_not_found: {
+            summary: 'User not found',
+            description: 'No user exists with the provided ID',
+            value: {
+              error: 'User not found',
+              error_code: 'USER_NOT_FOUND'
+            }
+          }
+        }
+
+        let(:'X-USER-ID') { '999999' }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['error_code']).to eq('USER_NOT_FOUND')
+        end
+      end
+
+    end
+  end
+
   path '/api/v1/sleep_records/{id}' do
     parameter name: :id, in: :path, type: :integer, description: 'Sleep record ID'
 
