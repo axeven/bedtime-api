@@ -6,7 +6,7 @@ namespace :api_docs do
     # Run rswag specs to generate documentation
     system("bundle exec rake rswag:specs:swaggerize")
 
-    if File.exist?('swagger/v1/swagger.yaml')
+    if File.exist?("swagger/v1/swagger.yaml")
       puts "✅ API documentation generated successfully!"
       puts "📄 View at: http://localhost:3000/api-docs"
     else
@@ -19,15 +19,15 @@ namespace :api_docs do
   task validate: :environment do
     puts "Validating API documentation..."
 
-    if File.exist?('swagger/v1/swagger.yaml')
-      require 'yaml'
+    if File.exist?("swagger/v1/swagger.yaml")
+      require "yaml"
       begin
-        doc = YAML.load_file('swagger/v1/swagger.yaml')
+        doc = YAML.load_file("swagger/v1/swagger.yaml")
 
         # Basic validation
-        raise "Missing info section" unless doc['info']
-        raise "Missing paths section" unless doc['paths']
-        raise "No endpoints documented" if doc['paths'].empty?
+        raise "Missing info section" unless doc["info"]
+        raise "Missing paths section" unless doc["paths"]
+        raise "No endpoints documented" if doc["paths"].empty?
 
         puts "✅ API documentation validation passed!"
         puts "📊 Documented endpoints: #{doc['paths'].keys.count}"
@@ -42,5 +42,5 @@ namespace :api_docs do
   end
 
   desc "Generate and validate API documentation"
-  task update: ['api_docs:generate', 'api_docs:validate']
+  task update: [ "api_docs:generate", "api_docs:validate" ]
 end

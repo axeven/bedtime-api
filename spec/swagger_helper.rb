@@ -52,7 +52,7 @@ RSpec.configure do |config|
               error: { type: :string, description: 'Error message' },
               error_code: { type: :string, description: 'Error code for programmatic handling' }
             },
-            required: ['error', 'error_code'],
+            required: [ 'error', 'error_code' ],
             example: {
               error: 'Resource not found',
               error_code: 'NOT_FOUND'
@@ -77,7 +77,7 @@ RSpec.configure do |config|
                   error: 'Validation failed',
                   error_code: 'VALIDATION_ERROR',
                   details: {
-                    name: ["can't be blank"]
+                    name: [ "can't be blank" ]
                   }
                 }
               }
@@ -95,7 +95,7 @@ RSpec.configure do |config|
                 example: '2024-01-15T10:30:00Z'
               }
             },
-            required: ['id', 'name', 'created_at']
+            required: [ 'id', 'name', 'created_at' ]
           },
           SleepRecord: SleepRecordSchemas.sleep_record_schema,
           SleepRecordsCollection: SleepRecordSchemas.sleep_records_collection_schema,

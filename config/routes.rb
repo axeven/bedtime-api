@@ -1,8 +1,8 @@
 Rails.application.routes.draw do
   # Mount rswag routes only if gems are available (development environment)
   if defined?(Rswag::Ui) && defined?(Rswag::Api)
-    mount Rswag::Ui::Engine => '/api-docs'
-    mount Rswag::Api::Engine => '/api-docs'
+    mount Rswag::Ui::Engine => "/api-docs"
+    mount Rswag::Api::Engine => "/api-docs"
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
@@ -13,8 +13,8 @@ Rails.application.routes.draw do
   # API routes
   namespace :api do
     namespace :v1 do
-      resources :users, only: [:create]
-      resources :sleep_records, only: [:create, :show, :update, :index, :destroy] do
+      resources :users, only: [ :create ]
+      resources :sleep_records, only: [ :create, :show, :update, :index, :destroy ] do
         collection do
           get :current
         end
