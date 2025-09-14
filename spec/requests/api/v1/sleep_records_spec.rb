@@ -480,6 +480,114 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         end
       end
 
+      response(400, 'Missing authentication header') do
+        description 'X-USER-ID header is required for clock-out'
+        schema '$ref' => '#/components/schemas/Error'
+
+        examples 'application/json' => {
+          missing_header: {
+            summary: 'Missing X-USER-ID header',
+            description: 'The X-USER-ID header is required for this endpoint',
+            value: {
+              error: 'X-USER-ID header is required',
+              error_code: 'MISSING_USER_ID'
+            }
+          }
+        }
+
+        let(:sleep_record) { {} }
+        let(:id) { 1 }
+        let(:'X-USER-ID') { nil }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['error_code']).to eq('MISSING_USER_ID')
+        end
+      end
+
+      response(404, 'User not found') do
+        description 'The specified user ID does not exist'
+        schema '$ref' => '#/components/schemas/Error'
+
+        examples 'application/json' => {
+          user_not_found: {
+            summary: 'User not found',
+            description: 'No user exists with the provided ID',
+            value: {
+              error: 'User not found',
+              error_code: 'USER_NOT_FOUND'
+            }
+          }
+        }
+
+        let(:sleep_record) { {} }
+        let(:id) { 1 }
+        let(:'X-USER-ID') { '999999' }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['error_code']).to eq('USER_NOT_FOUND')
+        end
+      end
+
+      response(200, 'Clock-out with custom wake time') do
+        description 'Successfully ends sleep session with provided wake time'
+        schema '$ref' => '#/components/schemas/SleepRecord'
+
+        examples 'application/json' => {
+          custom_wake_time: {
+            summary: 'Clock-out with specific wake time',
+            description: 'User provided a specific wake time for the sleep session',
+            value: {
+              id: 2,
+              user_id: 1,
+              bedtime: '2024-01-15T22:00:00Z',
+              wake_time: '2024-01-16T07:00:00Z',
+              duration_minutes: 540,
+              active: false,
+              created_at: '2024-01-15T22:00:00Z',
+              updated_at: '2024-01-16T07:00:00Z'
+            }
+          }
+        }
+
+        let(:sleep_record) { { wake_time: 6.hours.from_now.iso8601 } }
+        let(:id) { active_sleep_record.id }
+        let(:active_sleep_record) { test_user.sleep_records.create!(bedtime: 8.hours.ago) }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['active']).to be false
+          expect(data['wake_time']).to be_present
+          expect(data['duration_minutes']).to be > 0
+        end
+      end
+
+      response(422, 'Invalid wake time validation') do
+        description 'Wake time cannot be before bedtime'
+        schema '$ref' => '#/components/schemas/Error'
+
+        examples 'application/json' => {
+          invalid_wake_time: {
+            summary: 'Wake time before bedtime',
+            description: 'User provided wake time that is before the bedtime',
+            value: {
+              error: 'Validation failed: Wake time must be after bedtime',
+              error_code: 'VALIDATION_ERROR'
+            }
+          }
+        }
+
+        let(:sleep_record) { { wake_time: 10.hours.ago.iso8601 } }
+        let(:id) { active_sleep_record.id }
+        let(:active_sleep_record) { test_user.sleep_records.create!(bedtime: 8.hours.ago) }
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          expect(data['error_code']).to eq('VALIDATION_ERROR')
+        end
+      end
+
     end
 
     get('Get specific sleep record') do

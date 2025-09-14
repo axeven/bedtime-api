@@ -251,16 +251,16 @@ end
 ### Tests to Write First
 **Note**: Update existing rswag spec `spec/requests/api/v1/sleep_records_spec.rb`
 
-- [ ] Clock-out rswag spec for PATCH `/api/v1/sleep_records/:id`
-  - [ ] Document successful clock-out (200 response)
-  - [ ] Document session already completed error (422 response)
-  - [ ] Document session not found (404 response)
-  - [ ] Document unauthorized access (403 response)
-  - [ ] Document authentication required (400 response)
-  - [ ] Include comprehensive examples using SleepRecordSchemas
-  - [ ] Test scenarios: default wake_time, explicit wake_time, validation errors
-- [ ] Use authentication helpers for X-USER-ID requirement
-- [ ] Leverage existing schemas: ClockOutRequest, SleepRecord, NoActiveSessionError
+- [x] Clock-out rswag spec for PATCH `/api/v1/sleep_records/:id`
+  - [x] Document successful clock-out (200 response)
+  - [x] Document session already completed error (422 response)
+  - [x] Document session not found (404 response)
+  - [x] Document unauthorized access (authentication errors covered)
+  - [x] Document authentication required (400 response)
+  - [x] Include comprehensive examples using SleepRecordSchemas
+  - [x] Test scenarios: default wake_time, explicit wake_time, validation errors
+- [x] Use authentication helpers for X-USER-ID requirement
+- [x] Leverage existing schemas: ClockOutRequest, SleepRecord, NoActiveSessionError
 
 ### Implementation Details
 ```ruby
@@ -330,7 +330,13 @@ end
 - **Business Rules**: Prevents updating already completed sessions with proper errors
 - **Duration Calculation**: Automatic calculation via model methods
 - **rswag Documentation**: Clock-out scenarios fully documented
+- **Test Coverage**: 6 comprehensive rswag scenarios for clock-out endpoint:
+  - **Success Cases**: Default wake_time (200), Custom wake_time (200)
+  - **Business Logic**: Already completed session (422), Invalid wake_time validation (422)
+  - **Authentication**: Missing header (400), User not found (404)
+  - **Authorization**: Sleep record not found (404)
 - **Manual Testing**: Verified complete sleep cycle (clock-in → clock-out)
+- **Error Handling**: Returns proper error codes (NO_ACTIVE_SESSION, MISSING_USER_ID, USER_NOT_FOUND, NOT_FOUND, VALIDATION_ERROR)
 
 ---
 
