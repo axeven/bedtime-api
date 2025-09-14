@@ -5,11 +5,11 @@ This document provides a detailed implementation plan for Phase 3 of the Bedtime
 
 **Note**: This plan integrates the established rswag-based TDD approach. All API endpoints should be documented using rswag specs which automatically generate OpenAPI documentation. Authentication helpers and patterns are available in `spec/support/` directory.
 
-## Phase Status: 🟡 In Progress (1/6 steps completed)
+## Phase Status: 🟡 In Progress (2/6 steps completed)
 
 ### Progress Summary
 - ✅ **Step 1**: Follow Model & Database Schema - **COMPLETED**
-- ⬜ **Step 2**: Follow User API Endpoint - **NOT STARTED**
+- ✅ **Step 2**: Follow User API Endpoint - **COMPLETED**
 - ⬜ **Step 3**: Unfollow User API Endpoint - **NOT STARTED**
 - ⬜ **Step 4**: Following List Retrieval Endpoint - **NOT STARTED**
 - ⬜ **Step 5**: Followers List Retrieval Endpoint - **NOT STARTED**
@@ -131,23 +131,23 @@ end
 **Goal**: Implement API endpoint for users to follow other users
 
 ### Tasks Checklist
-- [ ] Create follows_controller.rb
-- [ ] Implement POST /api/v1/follows endpoint
-- [ ] Add proper authentication and authorization
-- [ ] Handle error cases (non-existent users, self-following, duplicates)
-- [ ] Return appropriate JSON responses
-- [ ] Add to API routes
+- [x] Create follows_controller.rb
+- [x] Implement POST /api/v1/follows endpoint
+- [x] Add proper authentication and authorization
+- [x] Handle error cases (non-existent users, self-following, duplicates)
+- [x] Return appropriate JSON responses
+- [x] Add to API routes
 
 ### Tests to Write First
 **Use rswag for API documentation**
 
-- [ ] rswag API specs for follows creation (in `spec/requests/api/v1/follows_spec.rb`)
-  - [ ] Successful follow creation (201)
-  - [ ] Authentication required (401)
-  - [ ] Following non-existent user (404)
-  - [ ] Attempting to follow self (422)
-  - [ ] Duplicate follow attempt (422)
-  - [ ] Invalid request format (400)
+- [x] rswag API specs for follows creation (in `spec/requests/api/v1/follows_spec.rb`)
+  - [x] Successful follow creation (201)
+  - [x] Authentication required (400)
+  - [x] Following non-existent user (404)
+  - [x] Attempting to follow self (422)
+  - [x] Duplicate follow attempt (422)
+  - [x] Invalid request format (400)
 
 ### Implementation Details
 ```ruby
@@ -251,12 +251,12 @@ end
 ```
 
 ### Acceptance Criteria
-- [ ] Users can follow other users by ID
-- [ ] Prevents self-following with clear error message
-- [ ] Prevents duplicate follows with appropriate response
-- [ ] Returns 404 for non-existent users
-- [ ] Returns proper JSON structure on success
-- [ ] Requires authentication via X-USER-ID header
+- [x] Users can follow other users by ID
+- [x] Prevents self-following with clear error message
+- [x] Prevents duplicate follows with appropriate response
+- [x] Returns 404 for non-existent users
+- [x] Returns proper JSON structure on success
+- [x] Requires authentication via X-USER-ID header
 
 ---
 

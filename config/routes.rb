@@ -19,6 +19,7 @@ Rails.application.routes.draw do
           get :current
         end
       end
+      resources :follows, only: [ :create, :index, :destroy ]
     end
   end
 
