@@ -4,18 +4,6 @@ module AuthenticationHelpers
   end
 
   module ClassMethods
-    # Add authentication requirement to an rswag endpoint
-    def requires_authentication
-      parameter name: 'X-USER-ID', in: :header, type: :string, required: true,
-                description: 'User ID for authentication',
-                example: '1',
-                schema: {
-                  type: :string,
-                  pattern: '^\d+$',
-                  minLength: 1
-                }
-    end
-
     # Add common authentication error responses
     def document_authentication_errors
       response(400, 'Missing authentication header') do

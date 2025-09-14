@@ -10,9 +10,8 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
   # Include authentication helpers
   include AuthenticationHelpers
 
-  # Define the test user and authentication header
-  let(:test_user) { User.create!(name: 'Sleep Tester') }
-  let(:'X-USER-ID') { test_user.id.to_s }
+  # Set up authenticated user for all tests
+  with_authenticated_user
 
   path '/api/v1/sleep_records' do
     post('Clock in - Start sleep session') do
@@ -33,7 +32,9 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
       consumes 'application/json'
       produces 'application/json'
 
-      requires_authentication
+      parameter name: 'X-USER-ID', in: :header, type: :string, required: true,
+                description: 'User ID for authentication',
+                example: '1'
 
       parameter name: :sleep_record, in: :body, required: false,
         description: 'Sleep session data (optional)',
@@ -72,7 +73,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         }
 
         let(:sleep_record) { {} }
-        let(:'X-USER-ID') { test_user.id.to_s }
 
         run_test! do |response|
           data = JSON.parse(response.body)
@@ -104,7 +104,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         }
 
         let(:sleep_record) { {} }
-        let(:'X-USER-ID') { test_user.id.to_s }
 
         before do
           # Create an active sleep session for the user
@@ -143,7 +142,9 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
       consumes 'application/json'
       produces 'application/json'
 
-      requires_authentication
+      parameter name: 'X-USER-ID', in: :header, type: :string, required: true,
+                description: 'User ID for authentication',
+                example: '1'
 
       parameter name: :limit, in: :query, type: :integer, required: false,
                 description: 'Number of records per page (max 100)',
@@ -204,8 +205,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
           }
         }
 
-        let(:'X-USER-ID') { test_user.id.to_s }
-
         before do
           # Create test sleep records
           test_user.sleep_records.create!(
@@ -248,7 +247,9 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
       consumes 'application/json'
       produces 'application/json'
 
-      requires_authentication
+      parameter name: 'X-USER-ID', in: :header, type: :string, required: true,
+                description: 'User ID for authentication',
+                example: '1'
 
       parameter name: :sleep_record, in: :body, required: false,
         description: 'Sleep session end data (optional)',
@@ -289,8 +290,6 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
         let(:sleep_record) { {} }
         let(:id) { active_sleep_record.id }
         let(:active_sleep_record) { test_user.sleep_records.create!(bedtime: 8.hours.ago) }
-        let(:'X-USER-ID') { test_user.id.to_s }
-
         run_test! do |response|
           data = JSON.parse(response.body)
           expect(data['active']).to be false
@@ -366,7 +365,9 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
       DESC
       produces 'application/json'
 
-      requires_authentication
+      parameter name: 'X-USER-ID', in: :header, type: :string, required: true,
+                description: 'User ID for authentication',
+                example: '1'
 
       response(200, 'Sleep record retrieved successfully') do
         description 'Returns the requested sleep record'
@@ -408,7 +409,9 @@ RSpec.describe 'api/v1/sleep_records', type: :request do
       DESC
       produces 'application/json'
 
-      requires_authentication
+      parameter name: 'X-USER-ID', in: :header, type: :string, required: true,
+                description: 'User ID for authentication',
+                example: '1'
 
       response(204, 'Sleep record deleted successfully') do
         description 'Sleep record was successfully deleted'
