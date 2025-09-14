@@ -41,13 +41,13 @@ class JsonResponderTest < ActionController::TestCase
   setup do
     # Add test routes temporarily
     Rails.application.routes.draw do
-      get 'json_responder_test/test_render_success', to: 'json_responder_test#test_render_success'
-      get 'json_responder_test/test_render_error', to: 'json_responder_test#test_render_error'
-      get 'json_responder_test/test_render_validation_error', to: 'json_responder_test#test_render_validation_error'
-      get 'json_responder_test/test_render_not_found', to: 'json_responder_test#test_render_not_found'
-      get 'json_responder_test/test_render_unauthorized', to: 'json_responder_test#test_render_unauthorized'
-      get 'json_responder_test/test_render_forbidden', to: 'json_responder_test#test_render_forbidden'
-      get 'json_responder_test/test_render_internal_error', to: 'json_responder_test#test_render_internal_error'
+      get "json_responder_test/test_render_success", to: "json_responder_test#test_render_success"
+      get "json_responder_test/test_render_error", to: "json_responder_test#test_render_error"
+      get "json_responder_test/test_render_validation_error", to: "json_responder_test#test_render_validation_error"
+      get "json_responder_test/test_render_not_found", to: "json_responder_test#test_render_not_found"
+      get "json_responder_test/test_render_unauthorized", to: "json_responder_test#test_render_unauthorized"
+      get "json_responder_test/test_render_forbidden", to: "json_responder_test#test_render_forbidden"
+      get "json_responder_test/test_render_internal_error", to: "json_responder_test#test_render_internal_error"
     end
   end
 
@@ -58,7 +58,7 @@ class JsonResponderTest < ActionController::TestCase
 
   test "render_success returns proper JSON response with custom status" do
     get :test_render_success
-    
+
     assert_response :created
     json_response = JSON.parse(response.body)
     assert_equal "Success", json_response["message"]
@@ -66,7 +66,7 @@ class JsonResponderTest < ActionController::TestCase
 
   test "render_error returns proper JSON response with details" do
     get :test_render_error
-    
+
     assert_response :bad_request
     json_response = JSON.parse(response.body)
     assert_equal "Test error", json_response["error"]
@@ -76,7 +76,7 @@ class JsonResponderTest < ActionController::TestCase
 
   test "render_validation_error returns proper JSON response" do
     get :test_render_validation_error
-    
+
     assert_response :unprocessable_entity
     json_response = JSON.parse(response.body)
     assert_equal "Validation failed", json_response["error"]
@@ -86,7 +86,7 @@ class JsonResponderTest < ActionController::TestCase
 
   test "render_not_found returns proper JSON response" do
     get :test_render_not_found
-    
+
     assert_response :not_found
     json_response = JSON.parse(response.body)
     assert_equal "Custom not found message", json_response["error"]
@@ -95,7 +95,7 @@ class JsonResponderTest < ActionController::TestCase
 
   test "render_unauthorized returns proper JSON response" do
     get :test_render_unauthorized
-    
+
     assert_response :unauthorized
     json_response = JSON.parse(response.body)
     assert_equal "Unauthorized access", json_response["error"]
@@ -104,7 +104,7 @@ class JsonResponderTest < ActionController::TestCase
 
   test "render_forbidden returns proper JSON response with custom message" do
     get :test_render_forbidden
-    
+
     assert_response :forbidden
     json_response = JSON.parse(response.body)
     assert_equal "Custom forbidden message", json_response["error"]
@@ -113,7 +113,7 @@ class JsonResponderTest < ActionController::TestCase
 
   test "render_internal_error returns proper JSON response" do
     get :test_render_internal_error
-    
+
     assert_response :internal_server_error
     json_response = JSON.parse(response.body)
     assert_equal "Internal server error", json_response["error"]
@@ -133,11 +133,11 @@ class JsonResponderTest < ActionController::TestCase
     error_methods.each do |method|
       get method
       json_response = JSON.parse(response.body)
-      
+
       # All error responses should have error and error_code
       assert json_response.key?("error"), "#{method} missing 'error' field"
       assert json_response.key?("error_code"), "#{method} missing 'error_code' field"
-      
+
       # error and error_code should be strings
       assert json_response["error"].is_a?(String), "#{method} error should be string"
       assert json_response["error_code"].is_a?(String), "#{method} error_code should be string"
@@ -147,7 +147,7 @@ class JsonResponderTest < ActionController::TestCase
   test "success responses do not include error fields" do
     get :test_render_success
     json_response = JSON.parse(response.body)
-    
+
     assert_not json_response.key?("error")
     assert_not json_response.key?("error_code")
   end

@@ -4,14 +4,14 @@ require "ostruct"
 class Api::V1::BaseControllerTest < ActiveSupport::TestCase
   # We'll test the base controller functionality using unit tests instead of integration tests
   # since we don't have actual endpoints yet
-  
+
   setup do
     @controller = Api::V1::BaseController.new
     @controller.define_singleton_method(:render) do |options|
       @render_options = options
     end
     @controller.instance_variable_set(:@render_options, {})
-    
+
     # Mock Rails.logger to avoid actual logging during tests
     @original_logger = Rails.logger
     Rails.logger = Logger.new(StringIO.new)
@@ -23,10 +23,10 @@ class Api::V1::BaseControllerTest < ActiveSupport::TestCase
 
   test "handle_standard_error renders proper JSON response" do
     exception = StandardError.new("Test error")
-    
+
     @controller.send(:handle_standard_error, exception)
     render_options = @controller.instance_variable_get(:@render_options)
-    
+
     assert_equal :internal_server_error, render_options[:status]
     assert_equal "Internal server error", render_options[:json][:error]
     assert_equal "INTERNAL_ERROR", render_options[:json][:error_code]
@@ -34,10 +34,10 @@ class Api::V1::BaseControllerTest < ActiveSupport::TestCase
 
   test "handle_not_found renders proper JSON response" do
     exception = ActiveRecord::RecordNotFound.new("Test not found")
-    
+
     @controller.send(:handle_not_found, exception)
     render_options = @controller.instance_variable_get(:@render_options)
-    
+
     assert_equal :not_found, render_options[:status]
     assert_equal "Resource not found", render_options[:json][:error]
     assert_equal "NOT_FOUND", render_options[:json][:error_code]
@@ -45,10 +45,10 @@ class Api::V1::BaseControllerTest < ActiveSupport::TestCase
 
   test "handle_bad_request renders proper JSON response" do
     exception = ActionController::ParameterMissing.new("test_param")
-    
+
     @controller.send(:handle_bad_request, exception)
     render_options = @controller.instance_variable_get(:@render_options)
-    
+
     assert_equal :bad_request, render_options[:status]
     assert_equal "param is missing or the value is empty or invalid: test_param", render_options[:json][:error]
     assert_equal "BAD_REQUEST", render_options[:json][:error_code]
@@ -58,10 +58,10 @@ class Api::V1::BaseControllerTest < ActiveSupport::TestCase
     user = User.new(name: "")
     user.validate
     exception = ActiveRecord::RecordInvalid.new(user)
-    
+
     @controller.send(:handle_validation_error, exception)
     render_options = @controller.instance_variable_get(:@render_options)
-    
+
     assert_equal :unprocessable_entity, render_options[:status]
     assert_equal "Validation failed", render_options[:json][:error]
     assert_equal "VALIDATION_ERROR", render_options[:json][:error_code]
@@ -71,7 +71,7 @@ class Api::V1::BaseControllerTest < ActiveSupport::TestCase
   test "render_success returns proper JSON response" do
     @controller.send(:render_success, { message: "Success" }, :created)
     render_options = @controller.instance_variable_get(:@render_options)
-    
+
     assert_equal :created, render_options[:status]
     assert_equal "Success", render_options[:json][:message]
   end
@@ -79,7 +79,7 @@ class Api::V1::BaseControllerTest < ActiveSupport::TestCase
   test "render_error returns proper JSON response" do
     @controller.send(:render_error, "Test error", "TEST_ERROR", { field: "value" }, :bad_request)
     render_options = @controller.instance_variable_get(:@render_options)
-    
+
     assert_equal :bad_request, render_options[:status]
     assert_equal "Test error", render_options[:json][:error]
     assert_equal "TEST_ERROR", render_options[:json][:error_code]
@@ -89,10 +89,10 @@ class Api::V1::BaseControllerTest < ActiveSupport::TestCase
   test "render_validation_error returns proper JSON response" do
     user = User.new(name: "")
     user.validate
-    
+
     @controller.send(:render_validation_error, user)
     render_options = @controller.instance_variable_get(:@render_options)
-    
+
     assert_equal :unprocessable_entity, render_options[:status]
     assert_equal "Validation failed", render_options[:json][:error]
     assert_equal "VALIDATION_ERROR", render_options[:json][:error_code]
@@ -100,11 +100,11 @@ class Api::V1::BaseControllerTest < ActiveSupport::TestCase
   end
 
   test "handle_unpermitted_parameters renders proper JSON response" do
-    exception = ActionController::UnpermittedParameters.new([:forbidden_param])
-    
+    exception = ActionController::UnpermittedParameters.new([ :forbidden_param ])
+
     @controller.send(:handle_unpermitted_parameters, exception)
     render_options = @controller.instance_variable_get(:@render_options)
-    
+
     assert_equal :bad_request, render_options[:status]
     assert_equal "Invalid parameters provided", render_options[:json][:error]
     assert_equal "INVALID_PARAMETERS", render_options[:json][:error_code]
@@ -112,10 +112,10 @@ class Api::V1::BaseControllerTest < ActiveSupport::TestCase
 
   test "handle_json_parse_error renders proper JSON response" do
     exception = JSON::ParserError.new("Invalid JSON")
-    
+
     @controller.send(:handle_json_parse_error, exception)
     render_options = @controller.instance_variable_get(:@render_options)
-    
+
     assert_equal :bad_request, render_options[:status]
     assert_equal "Invalid JSON format", render_options[:json][:error]
     assert_equal "INVALID_JSON", render_options[:json][:error_code]

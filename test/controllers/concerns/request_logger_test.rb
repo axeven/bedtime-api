@@ -29,10 +29,10 @@ class RequestLoggerTest < ActionController::TestCase
   setup do
     # Add test routes temporarily
     Rails.application.routes.draw do
-      get 'request_logger_test/success_action', to: 'request_logger_test#success_action'
-      get 'request_logger_test/error_action', to: 'request_logger_test#error_action'
-      get 'request_logger_test/validation_error_action', to: 'request_logger_test#validation_error_action'
-      post 'request_logger_test/custom_response_action', to: 'request_logger_test#custom_response_action'
+      get "request_logger_test/success_action", to: "request_logger_test#success_action"
+      get "request_logger_test/error_action", to: "request_logger_test#error_action"
+      get "request_logger_test/validation_error_action", to: "request_logger_test#validation_error_action"
+      post "request_logger_test/custom_response_action", to: "request_logger_test#custom_response_action"
     end
 
     # Capture log output for testing
@@ -49,26 +49,26 @@ class RequestLoggerTest < ActionController::TestCase
 
   test "logs successful requests and includes JSON structure" do
     get :success_action
-    
+
     assert_response :ok
-    
+
     log_content = @log_output.string
     assert log_content.present?, "Should have logged request"
-    
+
     # Check that log contains JSON-like structure
     assert_includes log_content, '"type":"api_request"'
     assert_includes log_content, '"method":"GET"'
     assert_includes log_content, '"status":200'
-    assert_includes log_content, 'success_action'
+    assert_includes log_content, "success_action"
   end
 
   test "logs errors with exception details" do
     assert_raises(StandardError) do
       get :error_action
     end
-    
+
     log_content = @log_output.string
-    
+
     # Check that error information is logged
     assert_includes log_content, '"error":'
     assert_includes log_content, '"class":"StandardError"'
@@ -79,27 +79,27 @@ class RequestLoggerTest < ActionController::TestCase
 
   test "includes timing information" do
     get :success_action
-    
+
     log_content = @log_output.string
-    
+
     # Check for duration_ms field
     assert_includes log_content, '"duration_ms":'
   end
 
   test "generates request IDs" do
     get :success_action
-    
+
     log_content = @log_output.string
-    
+
     # Check for request_id field
     assert_includes log_content, '"request_id":'
   end
 
   test "captures request parameters" do
     post :custom_response_action, params: { test_param: "test_value", user: { name: "Test" } }
-    
+
     log_content = @log_output.string
-    
+
     # Check that parameters are logged
     assert_includes log_content, '"params":'
     assert_includes log_content, '"test_param":"test_value"'
@@ -109,12 +109,12 @@ class RequestLoggerTest < ActionController::TestCase
   end
 
   test "captures relevant headers" do
-    @request.headers['X-USER-ID'] = '123'
-    
+    @request.headers["X-USER-ID"] = "123"
+
     get :success_action
-    
+
     log_content = @log_output.string
-    
+
     # Check that headers are logged
     assert_includes log_content, '"headers":'
     assert_includes log_content, '"user_id":"123"'
@@ -122,11 +122,11 @@ class RequestLoggerTest < ActionController::TestCase
 
   test "handles different response statuses correctly" do
     post :custom_response_action
-    
+
     assert_response :created
-    
+
     log_content = @log_output.string
-    
+
     # Check response status
     assert_includes log_content, '"status":201'
     assert_includes log_content, '"status_message":"Created"'
@@ -134,9 +134,9 @@ class RequestLoggerTest < ActionController::TestCase
 
   test "includes basic request structure" do
     get :success_action
-    
+
     log_content = @log_output.string
-    
+
     # Verify basic structure is present
     assert_includes log_content, '"type":"api_request"'
     assert_includes log_content, '"timestamp":'

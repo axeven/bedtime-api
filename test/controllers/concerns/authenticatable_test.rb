@@ -4,7 +4,7 @@ require "test_helper"
 class AuthenticatableTestController < ApplicationController
   include Authenticatable
 
-  skip_before_action :authenticate_user, only: [:test_create_action]
+  skip_before_action :authenticate_user, only: [ :test_create_action ]
 
   def test_action
     render json: { message: "Success", user_id: current_user.id }
@@ -20,11 +20,11 @@ class AuthenticatableTest < ActionController::TestCase
 
   setup do
     @user = User.create!(name: "Test User")
-    
+
     # Add test routes temporarily
     Rails.application.routes.draw do
-      get 'authenticatable_test/test_action', to: 'authenticatable_test#test_action'
-      post 'authenticatable_test/test_create_action', to: 'authenticatable_test#test_create_action'
+      get "authenticatable_test/test_action", to: "authenticatable_test#test_action"
+      post "authenticatable_test/test_create_action", to: "authenticatable_test#test_create_action"
     end
   end
 
@@ -34,9 +34,9 @@ class AuthenticatableTest < ActionController::TestCase
   end
 
   test "authenticates user with valid X-USER-ID header" do
-    request.headers['X-USER-ID'] = @user.id.to_s
+    request.headers["X-USER-ID"] = @user.id.to_s
     get :test_action
-    
+
     assert_response :success
     json_response = JSON.parse(response.body)
     assert_equal "Success", json_response["message"]
@@ -45,7 +45,7 @@ class AuthenticatableTest < ActionController::TestCase
 
   test "returns error when X-USER-ID header is missing" do
     get :test_action
-    
+
     assert_response :bad_request
     json_response = JSON.parse(response.body)
     assert_equal "X-USER-ID header is required", json_response["error"]
@@ -53,9 +53,9 @@ class AuthenticatableTest < ActionController::TestCase
   end
 
   test "returns error when X-USER-ID header is empty" do
-    request.headers['X-USER-ID'] = ""
+    request.headers["X-USER-ID"] = ""
     get :test_action
-    
+
     assert_response :bad_request
     json_response = JSON.parse(response.body)
     assert_equal "X-USER-ID header is required", json_response["error"]
@@ -63,9 +63,9 @@ class AuthenticatableTest < ActionController::TestCase
   end
 
   test "returns error when X-USER-ID header is whitespace only" do
-    request.headers['X-USER-ID'] = "   "
+    request.headers["X-USER-ID"] = "   "
     get :test_action
-    
+
     assert_response :bad_request
     json_response = JSON.parse(response.body)
     assert_equal "X-USER-ID header is required", json_response["error"]
@@ -73,9 +73,9 @@ class AuthenticatableTest < ActionController::TestCase
   end
 
   test "returns error when user ID does not exist" do
-    request.headers['X-USER-ID'] = "99999"
+    request.headers["X-USER-ID"] = "99999"
     get :test_action
-    
+
     assert_response :not_found
     json_response = JSON.parse(response.body)
     assert_equal "User not found", json_response["error"]
@@ -83,9 +83,9 @@ class AuthenticatableTest < ActionController::TestCase
   end
 
   test "returns error when user ID is invalid format" do
-    request.headers['X-USER-ID'] = "invalid"
+    request.headers["X-USER-ID"] = "invalid"
     get :test_action
-    
+
     assert_response :not_found
     json_response = JSON.parse(response.body)
     assert_equal "User not found", json_response["error"]
@@ -94,16 +94,16 @@ class AuthenticatableTest < ActionController::TestCase
 
   test "skips authentication for create action" do
     post :test_create_action
-    
+
     assert_response :success
     json_response = JSON.parse(response.body)
     assert_equal "Create action (no auth required)", json_response["message"]
   end
 
   test "current_user returns authenticated user" do
-    request.headers['X-USER-ID'] = @user.id.to_s
+    request.headers["X-USER-ID"] = @user.id.to_s
     get :test_action
-    
+
     assert_response :success
     # The controller should have access to current_user
     assert_equal @user.id, @controller.send(:current_user).id
