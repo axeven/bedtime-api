@@ -47,6 +47,35 @@ class Api::V1::FollowsController < Api::V1::BaseController
     end
   end
 
+  def destroy
+    following_user = User.find_by(id: params[:id])
+
+    unless following_user
+      render_error(
+        'User not found',
+        'USER_NOT_FOUND',
+        {},
+        :not_found
+      )
+      return
+    end
+
+    follow = current_user.follows.find_by(following_user: following_user)
+
+    unless follow
+      render_error(
+        'Not following this user',
+        'FOLLOW_RELATIONSHIP_NOT_FOUND',
+        {},
+        :not_found
+      )
+      return
+    end
+
+    follow.destroy
+    head :no_content
+  end
+
   private
 
   def follow_params

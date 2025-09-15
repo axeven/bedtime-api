@@ -70,6 +70,40 @@ paths:
               - following_user_id
         required: true
         description: Follow creation payload
+  "/api/v1/follows/{following_user_id}":
+    delete:
+      summary: Unfollow a user
+      tags:
+      - Follows
+      description: Remove a following relationship with another user
+      parameters:
+      - name: X-USER-ID
+        in: header
+        required: true
+        description: User ID for authentication
+        schema:
+          type: string
+      - name: following_user_id
+        in: path
+        required: true
+        description: ID of user to unfollow
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Successfully unfollowed user
+        '400':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '404':
+          description: User not found or not following
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
   "/api/v1/sleep_records":
     post:
       summary: Clock in - Start sleep session

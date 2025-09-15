@@ -5,12 +5,12 @@ This document provides a detailed implementation plan for Phase 3 of the Bedtime
 
 **Note**: This plan integrates the established rswag-based TDD approach. All API endpoints should be documented using rswag specs which automatically generate OpenAPI documentation. Authentication helpers and patterns are available in `spec/support/` directory.
 
-## Phase Status: 🟡 In Progress (2/6 steps completed)
+## Phase Status: 🟡 In Progress (3/6 steps completed)
 
 ### Progress Summary
 - ✅ **Step 1**: Follow Model & Database Schema - **COMPLETED**
 - ✅ **Step 2**: Follow User API Endpoint - **COMPLETED**
-- ⬜ **Step 3**: Unfollow User API Endpoint - **NOT STARTED**
+- ✅ **Step 3**: Unfollow User API Endpoint - **COMPLETED**
 - ⬜ **Step 4**: Following List Retrieval Endpoint - **NOT STARTED**
 - ⬜ **Step 5**: Followers List Retrieval Endpoint - **NOT STARTED**
 - ⬜ **Step 6**: Integration Testing & Manual Validation - **NOT STARTED**
@@ -264,20 +264,20 @@ end
 **Goal**: Implement API endpoint for users to unfollow other users
 
 ### Tasks Checklist
-- [ ] Implement DELETE /api/v1/follows/:following_user_id endpoint
-- [ ] Add proper authentication and authorization
-- [ ] Handle error cases (non-existent relationships)
-- [ ] Return appropriate status codes
-- [ ] Use following_user_id as identifier in URL
+- [x] Implement DELETE /api/v1/follows/:following_user_id endpoint
+- [x] Add proper authentication and authorization
+- [x] Handle error cases (non-existent relationships)
+- [x] Return appropriate status codes
+- [x] Use following_user_id as identifier in URL
 
 ### Tests to Write First
 **Use rswag for API documentation**
 
-- [ ] rswag API specs for unfollow (in `spec/requests/api/v1/follows_spec.rb`)
-  - [ ] Successful unfollow (204 No Content)
-  - [ ] Authentication required (401)
-  - [ ] Unfollowing non-existent user (404)
-  - [ ] Unfollowing user not being followed (404)
+- [x] rswag API specs for unfollow (in `spec/requests/api/v1/follows_spec.rb`)
+  - [x] Successful unfollow (204 No Content)
+  - [x] Authentication required (400)
+  - [x] Unfollowing non-existent user (404)
+  - [x] Unfollowing user not being followed (404)
 
 ### Implementation Details
 ```ruby
@@ -326,11 +326,11 @@ end
 ```
 
 ### Acceptance Criteria
-- [ ] Users can unfollow users they're following
-- [ ] Returns 204 No Content on successful unfollow
-- [ ] Returns 404 for non-existent users
-- [ ] Returns 404 for relationships that don't exist
-- [ ] Requires authentication via X-USER-ID header
+- [x] Users can unfollow users they're following
+- [x] Returns 204 No Content on successful unfollow
+- [x] Returns 404 for non-existent users
+- [x] Returns 404 for relationships that don't exist
+- [x] Requires authentication via X-USER-ID header
 
 ---
 

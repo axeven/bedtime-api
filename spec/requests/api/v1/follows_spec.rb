@@ -119,4 +119,78 @@ RSpec.describe 'api/v1/follows', type: :request do
       end
     end
   end
+
+  path '/api/v1/follows/{following_user_id}' do
+    delete('Unfollow a user') do
+      tags 'Follows'
+      description 'Remove a following relationship with another user'
+      produces 'application/json'
+
+      parameter name: 'X-USER-ID', in: :header, type: :string, required: true,
+                description: 'User ID for authentication'
+      parameter name: :following_user_id, in: :path, type: :integer, required: true,
+                description: 'ID of user to unfollow'
+
+      response '204', 'Successfully unfollowed user' do
+        let!(:current_user) { User.create!(name: 'Current User') }
+        let!(:target_user) { User.create!(name: 'Target User') }
+        let(:'X-USER-ID') { current_user.id.to_s }
+        let(:following_user_id) { target_user.id }
+
+        before do
+          current_user.follows.create!(following_user: target_user)
+        end
+
+        run_test! do |response|
+          expect(response.body).to be_empty
+          expect(current_user.follows.find_by(following_user: target_user)).to be_nil
+        end
+      end
+
+      response '400', 'Authentication required' do
+        schema '$ref' => '#/components/schemas/Error'
+
+        let!(:target_user) { User.create!(name: 'Target User') }
+        let(:following_user_id) { target_user.id }
+
+        context 'without X-USER-ID header' do
+          let(:'X-USER-ID') { nil }
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['error_code']).to eq('MISSING_USER_ID')
+          end
+        end
+      end
+
+      response '404', 'User not found or not following' do
+        schema '$ref' => '#/components/schemas/Error'
+
+        context 'unfollowing non-existent user' do
+          let!(:current_user) { User.create!(name: 'Current User') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+          let(:following_user_id) { 999999 }
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['error_code']).to eq('USER_NOT_FOUND')
+            expect(data['error']).to eq('User not found')
+          end
+        end
+
+        context 'unfollowing user not being followed' do
+          let!(:current_user) { User.create!(name: 'Current User') }
+          let!(:target_user) { User.create!(name: 'Target User') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+          let(:following_user_id) { target_user.id }
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['error_code']).to eq('FOLLOW_RELATIONSHIP_NOT_FOUND')
+            expect(data['error']).to eq('Not following this user')
+          end
+        end
+      end
+    end
+  end
 end
