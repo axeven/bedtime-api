@@ -47,6 +47,37 @@ class Api::V1::FollowsController < Api::V1::BaseController
     end
   end
 
+  def index
+    limit = [params[:limit]&.to_i || 20, 100].min
+    offset = params[:offset]&.to_i || 0
+
+    follows = current_user.follows
+                         .includes(:following_user)
+                         .order(created_at: :desc)
+                         .limit(limit)
+                         .offset(offset)
+
+    total_count = current_user.follows.count
+
+    following_users = follows.map do |follow|
+      {
+        id: follow.following_user.id,
+        name: follow.following_user.name,
+        followed_at: follow.created_at.iso8601
+      }
+    end
+
+    render_success({
+      following: following_users,
+      pagination: {
+        total_count: total_count,
+        limit: limit,
+        offset: offset,
+        has_more: (offset + limit) < total_count
+      }
+    })
+  end
+
   def destroy
     following_user = User.find_by(id: params[:id])
 

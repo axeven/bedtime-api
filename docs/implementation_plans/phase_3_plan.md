@@ -5,13 +5,13 @@ This document provides a detailed implementation plan for Phase 3 of the Bedtime
 
 **Note**: This plan integrates the established rswag-based TDD approach. All API endpoints should be documented using rswag specs which automatically generate OpenAPI documentation. Authentication helpers and patterns are available in `spec/support/` directory.
 
-## Phase Status: 🟡 In Progress (3/6 steps completed)
+## Phase Status: 🟡 In Progress (4/6 steps completed)
 
 ### Progress Summary
 - ✅ **Step 1**: Follow Model & Database Schema - **COMPLETED**
 - ✅ **Step 2**: Follow User API Endpoint - **COMPLETED**
 - ✅ **Step 3**: Unfollow User API Endpoint - **COMPLETED**
-- ⬜ **Step 4**: Following List Retrieval Endpoint - **NOT STARTED**
+- ✅ **Step 4**: Following List Retrieval Endpoint - **COMPLETED**
 - ⬜ **Step 5**: Followers List Retrieval Endpoint - **NOT STARTED**
 - ⬜ **Step 6**: Integration Testing & Manual Validation - **NOT STARTED**
 
@@ -338,21 +338,21 @@ end
 **Goal**: Implement API endpoint to retrieve list of users that current user is following
 
 ### Tasks Checklist
-- [ ] Implement GET /api/v1/follows endpoint
-- [ ] Add pagination support (limit/offset)
-- [ ] Return user information for followed users
-- [ ] Add proper ordering (most recent follows first)
-- [ ] Include total count for pagination
+- [x] Implement GET /api/v1/follows endpoint
+- [x] Add pagination support (limit/offset)
+- [x] Return user information for followed users
+- [x] Add proper ordering (most recent follows first)
+- [x] Include total count for pagination
 
 ### Tests to Write First
 **Use rswag for API documentation**
 
-- [ ] rswag API specs for following list (in `spec/requests/api/v1/follows_spec.rb`)
-  - [ ] Successful retrieval with results (200)
-  - [ ] Empty results for user with no follows (200)
-  - [ ] Pagination parameters work correctly
-  - [ ] Authentication required (401)
-  - [ ] Proper ordering (newest follows first)
+- [x] rswag API specs for following list (in `spec/requests/api/v1/follows_spec.rb`)
+  - [x] Successful retrieval with results (200)
+  - [x] Empty results for user with no follows (200)
+  - [x] Pagination parameters work correctly
+  - [x] Authentication required (400)
+  - [x] Proper ordering (newest follows first)
 
 ### Implementation Details
 ```ruby
@@ -423,12 +423,12 @@ end
 ```
 
 ### Acceptance Criteria
-- [ ] Returns list of users current user is following
-- [ ] Includes user ID, name, and follow timestamp
-- [ ] Orders results by most recent follows first
-- [ ] Supports pagination with limit/offset
-- [ ] Returns pagination metadata
-- [ ] Requires authentication via X-USER-ID header
+- [x] Returns list of users current user is following
+- [x] Includes user ID, name, and follow timestamp
+- [x] Orders results by most recent follows first
+- [x] Supports pagination with limit/offset
+- [x] Returns pagination metadata
+- [x] Requires authentication via X-USER-ID header
 
 ---
 

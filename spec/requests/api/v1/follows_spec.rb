@@ -118,6 +118,134 @@ RSpec.describe 'api/v1/follows', type: :request do
         end
       end
     end
+
+    get('Get following list') do
+      tags 'Follows'
+      description 'Retrieve list of users that the current user is following'
+      produces 'application/json'
+
+      parameter name: 'X-USER-ID', in: :header, type: :string, required: true,
+                description: 'User ID for authentication'
+      parameter name: :limit, in: :query, type: :integer, required: false,
+                description: 'Number of results (max 100, default 20)'
+      parameter name: :offset, in: :query, type: :integer, required: false,
+                description: 'Starting position (default 0)'
+
+      response '200', 'Following list retrieved successfully' do
+        description 'Returns list of users being followed with pagination'
+        schema type: :object,
+               properties: {
+                 following: {
+                   type: :array,
+                   items: {
+                     type: :object,
+                     properties: {
+                       id: { type: :integer },
+                       name: { type: :string },
+                       followed_at: { type: :string, format: 'date-time' }
+                     }
+                   }
+                 },
+                 pagination: {
+                   type: :object,
+                   properties: {
+                     total_count: { type: :integer },
+                     limit: { type: :integer },
+                     offset: { type: :integer },
+                     has_more: { type: :boolean }
+                   }
+                 }
+               }
+
+        context 'with following relationships' do
+          let!(:current_user) { User.create!(name: 'Current User') }
+          let!(:user1) { User.create!(name: 'User One') }
+          let!(:user2) { User.create!(name: 'User Two') }
+          let!(:user3) { User.create!(name: 'User Three') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+
+          before do
+            current_user.follows.create!(following_user: user1)
+            sleep(0.01) # Ensure different timestamps
+            current_user.follows.create!(following_user: user2)
+            sleep(0.01)
+            current_user.follows.create!(following_user: user3)
+          end
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['following']).to be_an(Array)
+            expect(data['following'].size).to eq(3)
+            expect(data['pagination']['total_count']).to eq(3)
+            expect(data['pagination']['limit']).to eq(20)
+            expect(data['pagination']['offset']).to eq(0)
+            expect(data['pagination']['has_more']).to be(false)
+
+            # Check ordering (most recent first)
+            expect(data['following'][0]['name']).to eq('User Three')
+            expect(data['following'][1]['name']).to eq('User Two')
+            expect(data['following'][2]['name']).to eq('User One')
+
+            # Check structure
+            data['following'].each do |user|
+              expect(user).to have_key('id')
+              expect(user).to have_key('name')
+              expect(user).to have_key('followed_at')
+            end
+          end
+        end
+
+        context 'with pagination' do
+          let!(:current_user) { User.create!(name: 'Current User') }
+          let!(:user1) { User.create!(name: 'User One') }
+          let!(:user2) { User.create!(name: 'User Two') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+          let(:limit) { 1 }
+          let(:offset) { 0 }
+
+          before do
+            current_user.follows.create!(following_user: user1)
+            sleep(0.01)
+            current_user.follows.create!(following_user: user2)
+          end
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['following'].size).to eq(1)
+            expect(data['pagination']['total_count']).to eq(2)
+            expect(data['pagination']['limit']).to eq(1)
+            expect(data['pagination']['offset']).to eq(0)
+            expect(data['pagination']['has_more']).to be(true)
+          end
+        end
+
+        context 'with no following relationships' do
+          let!(:current_user) { User.create!(name: 'Lonely User') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['following']).to be_an(Array)
+            expect(data['following']).to be_empty
+            expect(data['pagination']['total_count']).to eq(0)
+            expect(data['pagination']['has_more']).to be(false)
+          end
+        end
+      end
+
+      response '400', 'Authentication required' do
+        schema '$ref' => '#/components/schemas/Error'
+
+        context 'without X-USER-ID header' do
+          let(:'X-USER-ID') { nil }
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['error_code']).to eq('MISSING_USER_ID')
+          end
+        end
+      end
+    end
   end
 
   path '/api/v1/follows/{following_user_id}' do

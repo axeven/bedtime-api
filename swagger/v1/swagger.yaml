@@ -70,6 +70,67 @@ paths:
               - following_user_id
         required: true
         description: Follow creation payload
+    get:
+      summary: Get following list
+      tags:
+      - Follows
+      description: Returns list of users being followed with pagination
+      parameters:
+      - name: X-USER-ID
+        in: header
+        required: true
+        description: User ID for authentication
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        description: Number of results (max 100, default 20)
+        schema:
+          type: integer
+      - name: offset
+        in: query
+        required: false
+        description: Starting position (default 0)
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Following list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  following:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        followed_at:
+                          type: string
+                          format: date-time
+                  pagination:
+                    type: object
+                    properties:
+                      total_count:
+                        type: integer
+                      limit:
+                        type: integer
+                      offset:
+                        type: integer
+                      has_more:
+                        type: boolean
+        '400':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
   "/api/v1/follows/{following_user_id}":
     delete:
       summary: Unfollow a user
