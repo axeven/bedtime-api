@@ -15,6 +15,12 @@ class SleepRecord < ApplicationRecord
   scope :for_user, ->(user) { where(user: user) }
   scope :recent_first, -> { order(bedtime: :desc) }
 
+  # Social feed scopes for retrieving sleep data from followed users
+  scope :completed_records, -> { where.not(bedtime: nil).where.not(wake_time: nil) }
+  scope :recent_records, ->(days = 7) { where(bedtime: days.days.ago..Time.current) }
+  scope :by_duration, -> { order(duration_minutes: :desc) }
+  scope :for_social_feed, -> { completed_records.recent_records.by_duration }
+
   MAX_REASONABLE_SLEEP_HOURS = 24
   MIN_REASONABLE_SLEEP_MINUTES = 1
 
@@ -29,6 +35,38 @@ class SleepRecord < ApplicationRecord
   def duration_minutes
     return nil unless completed?
     ((wake_time - bedtime) / 60).round
+  end
+
+  # Social feed query methods for retrieving sleep records from followed users
+  def self.social_feed_for_user(user)
+    followed_user_ids = user.following_users.pluck(:id)
+    return none if followed_user_ids.empty?
+
+    includes(:user)
+      .where(user_id: followed_user_ids)
+      .for_social_feed
+  end
+
+  def self.social_feed_with_pagination(user, limit: 20, offset: 0)
+    social_feed_for_user(user)
+      .limit(limit)
+      .offset(offset)
+  end
+
+  # Display helper methods for formatting sleep record data
+  def user_name
+    user.name
+  end
+
+  def sleep_date
+    bedtime&.to_date
+  end
+
+  def formatted_duration
+    return nil unless duration_minutes
+    hours = duration_minutes / 60
+    minutes = duration_minutes % 60
+    "#{hours}h #{minutes}m"
   end
 
   private

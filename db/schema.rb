@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_14_125109) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_15_040837) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -31,7 +31,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_14_125109) do
     t.integer "duration_minutes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["bedtime", "wake_time"], name: "index_sleep_records_on_completion_and_date"
     t.index ["bedtime"], name: "index_sleep_records_on_bedtime"
+    t.index ["duration_minutes"], name: "index_sleep_records_on_duration"
+    t.index ["user_id", "bedtime", "wake_time", "duration_minutes"], name: "index_sleep_records_social_feed"
+    t.index ["user_id", "bedtime"], name: "index_sleep_records_on_user_and_bedtime"
     t.index ["user_id", "bedtime"], name: "index_sleep_records_on_user_id_and_bedtime"
     t.index ["user_id"], name: "index_sleep_records_on_user_id"
   end

@@ -5,10 +5,10 @@ This document provides a detailed implementation plan for Phase 4 of the Bedtime
 
 **Note**: This phase builds on the social following system from Phase 3 and the sleep record functionality from Phase 2. All API endpoints should be documented using rswag specs which automatically generate OpenAPI documentation. Authentication helpers and patterns are available in `spec/support/` directory.
 
-## Phase Status: ⬜ Not Started (0/7 steps completed)
+## Phase Status: 🟡 In Progress (1/7 steps completed)
 
 ### Progress Summary
-- ⬜ **Step 1**: Social Sleep Data Model Enhancements - **Not Started**
+- ✅ **Step 1**: Social Sleep Data Model Enhancements - **COMPLETED**
 - ⬜ **Step 2**: Following Users' Sleep Records Endpoint - **Not Started**
 - ⬜ **Step 3**: Date Range Filtering Implementation - **Not Started**
 - ⬜ **Step 4**: Duration-Based Sorting & Aggregation - **Not Started**
@@ -22,28 +22,28 @@ This document provides a detailed implementation plan for Phase 4 of the Bedtime
 **Goal**: Enhance SleepRecord model and database schema for social querying capabilities
 
 ### Tasks Checklist
-- [ ] Add database indexes for social queries (user_id, bedtime, wake_time, duration)
-- [ ] Create SleepRecord scopes for social data access
-- [ ] Add completed_records scope (both bedtime and wake_time present)
-- [ ] Add recent_records scope (last 7 days)
-- [ ] Add by_duration scope (ordered by duration)
-- [ ] Create social query helper methods
-- [ ] Verify database performance with EXPLAIN queries
+- [x] Add database indexes for social queries (user_id, bedtime, wake_time, duration)
+- [x] Create SleepRecord scopes for social data access
+- [x] Add completed_records scope (both bedtime and wake_time present)
+- [x] Add recent_records scope (last 7 days)
+- [x] Add by_duration scope (ordered by duration)
+- [x] Create social query helper methods
+- [x] Verify database performance with EXPLAIN queries
 
 ### Tests to Write First
 **Note**: Use standard RSpec for model tests, rswag for API documentation
 
-- [ ] SleepRecord model scope tests (standard RSpec)
-  - [ ] `completed_records` scope returns only records with both bedtime and wake_time
-  - [ ] `recent_records` scope returns records from last 7 days
-  - [ ] `by_duration` scope orders by duration (longest first)
-  - [ ] `for_social_feed` scope combines completed + recent + ordered
-  - [ ] Performance tests for large datasets (1000+ records)
-- [ ] Social query helper method tests (standard RSpec)
-  - [ ] `SleepRecord.social_feed_for_user(user)` returns followed users' records
-  - [ ] Social feed respects privacy (only followed users' data)
-  - [ ] Social feed excludes incomplete records
-  - [ ] Social feed includes user identification
+- [x] SleepRecord model scope tests (standard RSpec)
+  - [x] `completed_records` scope returns only records with both bedtime and wake_time
+  - [x] `recent_records` scope returns records from last 7 days
+  - [x] `by_duration` scope orders by duration (longest first)
+  - [x] `for_social_feed` scope combines completed + recent + ordered
+  - [x] Performance tests for large datasets (1000+ records)
+- [x] Social query helper method tests (standard RSpec)
+  - [x] `SleepRecord.social_feed_for_user(user)` returns followed users' records
+  - [x] Social feed respects privacy (only followed users' data)
+  - [x] Social feed excludes incomplete records
+  - [x] Social feed includes user identification
 
 ### Implementation Details
 ```ruby
@@ -120,12 +120,12 @@ end
 ```
 
 ### Acceptance Criteria
-- [ ] SleepRecord model has efficient scopes for social queries
-- [ ] Database indexes support fast social feed generation
-- [ ] Only completed records (with both bedtime and wake_time) included
-- [ ] Recent records scope properly filters last 7 days
-- [ ] Duration-based ordering works correctly
-- [ ] Social feed helper methods respect privacy boundaries
+- [x] SleepRecord model has efficient scopes for social queries
+- [x] Database indexes support fast social feed generation
+- [x] Only completed records (with both bedtime and wake_time) included
+- [x] Recent records scope properly filters last 7 days
+- [x] Duration-based ordering works correctly
+- [x] Social feed helper methods respect privacy boundaries
 
 ---
 
