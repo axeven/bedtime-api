@@ -5,14 +5,14 @@ This document provides a detailed implementation plan for Phase 3 of the Bedtime
 
 **Note**: This plan integrates the established rswag-based TDD approach. All API endpoints should be documented using rswag specs which automatically generate OpenAPI documentation. Authentication helpers and patterns are available in `spec/support/` directory.
 
-## Phase Status: 🟡 In Progress (4/6 steps completed)
+## Phase Status: 🟡 In Progress (5/6 steps completed)
 
 ### Progress Summary
 - ✅ **Step 1**: Follow Model & Database Schema - **COMPLETED**
 - ✅ **Step 2**: Follow User API Endpoint - **COMPLETED**
 - ✅ **Step 3**: Unfollow User API Endpoint - **COMPLETED**
 - ✅ **Step 4**: Following List Retrieval Endpoint - **COMPLETED**
-- ⬜ **Step 5**: Followers List Retrieval Endpoint - **NOT STARTED**
+- ✅ **Step 5**: Followers List Retrieval Endpoint - **COMPLETED**
 - ⬜ **Step 6**: Integration Testing & Manual Validation - **NOT STARTED**
 
 ---
@@ -436,22 +436,22 @@ end
 **Goal**: Implement API endpoint to retrieve list of users following the current user
 
 ### Tasks Checklist
-- [ ] Create followers_controller.rb or add to follows_controller
-- [ ] Implement GET /api/v1/followers endpoint
-- [ ] Add pagination support (limit/offset)
-- [ ] Return user information for followers
-- [ ] Add proper ordering (most recent followers first)
-- [ ] Include total count for pagination
+- [x] Create followers_controller.rb or add to follows_controller
+- [x] Implement GET /api/v1/followers endpoint
+- [x] Add pagination support (limit/offset)
+- [x] Return user information for followers
+- [x] Add proper ordering (most recent followers first)
+- [x] Include total count for pagination
 
 ### Tests to Write First
 **Use rswag for API documentation**
 
-- [ ] rswag API specs for followers list (in `spec/requests/api/v1/followers_spec.rb`)
-  - [ ] Successful retrieval with results (200)
-  - [ ] Empty results for user with no followers (200)
-  - [ ] Pagination parameters work correctly
-  - [ ] Authentication required (401)
-  - [ ] Proper ordering (newest followers first)
+- [x] rswag API specs for followers list (in `spec/requests/api/v1/followers_spec.rb`)
+  - [x] Successful retrieval with results (200)
+  - [x] Empty results for user with no followers (200)
+  - [x] Pagination parameters work correctly
+  - [x] Authentication required (400)
+  - [x] Proper ordering (newest followers first)
 
 ### Implementation Details
 ```ruby
@@ -529,12 +529,12 @@ end
 ```
 
 ### Acceptance Criteria
-- [ ] Returns list of users following the current user
-- [ ] Includes user ID, name, and follow timestamp
-- [ ] Orders results by most recent followers first
-- [ ] Supports pagination with limit/offset
-- [ ] Returns pagination metadata
-- [ ] Requires authentication via X-USER-ID header
+- [x] Returns list of users following the current user
+- [x] Includes user ID, name, and follow timestamp
+- [x] Orders results by most recent followers first
+- [x] Supports pagination with limit/offset
+- [x] Returns pagination metadata
+- [x] Requires authentication via X-USER-ID header
 
 ---
 

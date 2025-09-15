@@ -20,6 +20,7 @@ Rails.application.routes.draw do
         end
       end
       resources :follows, only: [ :create, :index, :destroy ]
+      resources :followers, only: [ :index ]
     end
   end
 

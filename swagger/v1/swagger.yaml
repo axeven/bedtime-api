@@ -8,6 +8,68 @@ info:
     name: API Support
     url: https://github.com/axeven/bedtime-api
 paths:
+  "/api/v1/followers":
+    get:
+      summary: Get followers list
+      tags:
+      - Followers
+      description: Returns list of users following the current user with pagination
+      parameters:
+      - name: X-USER-ID
+        in: header
+        required: true
+        description: User ID for authentication
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        description: Number of results (max 100, default 20)
+        schema:
+          type: integer
+      - name: offset
+        in: query
+        required: false
+        description: Starting position (default 0)
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Followers list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  followers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        followed_at:
+                          type: string
+                          format: date-time
+                  pagination:
+                    type: object
+                    properties:
+                      total_count:
+                        type: integer
+                      limit:
+                        type: integer
+                      offset:
+                        type: integer
+                      has_more:
+                        type: boolean
+        '400':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
   "/api/v1/follows":
     post:
       summary: Follow a user
