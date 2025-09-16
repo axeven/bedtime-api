@@ -5,13 +5,13 @@ This document provides a detailed implementation plan for Phase 4 of the Bedtime
 
 **Note**: This phase builds on the social following system from Phase 3 and the sleep record functionality from Phase 2. All API endpoints should be documented using rswag specs which automatically generate OpenAPI documentation. Authentication helpers and patterns are available in `spec/support/` directory.
 
-## Phase Status: 🟡 In Progress (3/7 steps completed)
+## Phase Status: 🟡 In Progress (4/7 steps completed)
 
 ### Progress Summary
 - ✅ **Step 1**: Social Sleep Data Model Enhancements - **COMPLETED**
 - ✅ **Step 2**: Following Users' Sleep Records Endpoint - **COMPLETED**
 - ✅ **Step 3**: Date Range Filtering Implementation - **COMPLETED**
-- ⬜ **Step 4**: Duration-Based Sorting & Aggregation - **Not Started**
+- ✅ **Step 4**: Duration-Based Sorting & Aggregation - **COMPLETED**
 - ⬜ **Step 5**: Complete Records Filter & Privacy Controls - **Not Started**
 - ⬜ **Step 6**: Pagination & Performance Optimization - **Not Started**
 - ⬜ **Step 7**: Integration Testing & Manual Validation - **Not Started**
@@ -422,22 +422,22 @@ end
 **Goal**: Implement sorting by sleep duration and handle multiple records per user
 
 ### Tasks Checklist
-- [ ] Implement duration-based sorting (longest to shortest)
-- [ ] Allow multiple records per user in results
-- [ ] Add sorting options query parameter
-- [ ] Implement aggregation statistics for the feed
-- [ ] Add duration formatting and display helpers
-- [ ] Optimize queries for large datasets
+- [x] Implement duration-based sorting (longest to shortest)
+- [x] Allow multiple records per user in results
+- [x] Add sorting options query parameter
+- [x] Implement aggregation statistics for the feed
+- [x] Add duration formatting and display helpers
+- [x] Optimize queries for large datasets
 
 ### Tests to Write First
 **Use rswag for API documentation**
 
-- [ ] rswag API specs for duration sorting (extend existing spec file)
-  - [ ] Records sorted by duration (descending) by default
-  - [ ] Multiple records per user included
-  - [ ] Sorting parameter options work correctly
-  - [ ] Duration formatting is consistent
-  - [ ] Aggregation statistics calculated correctly
+- [x] rswag API specs for duration sorting (extend existing spec file)
+  - [x] Records sorted by duration (descending) by default
+  - [x] Multiple records per user included
+  - [x] Sorting parameter options work correctly
+  - [x] Duration formatting is consistent
+  - [x] Aggregation statistics calculated correctly
 
 ### Implementation Details
 ```ruby
@@ -588,12 +588,12 @@ statistics: {
 ```
 
 ### Acceptance Criteria
-- [ ] Records sorted by sleep duration (longest first) by default
-- [ ] Multiple records per user allowed in results
-- [ ] Alternative sorting options (bedtime, wake_time, created_at) work
-- [ ] Aggregation statistics calculated correctly
-- [ ] Duration formatting is consistent across responses
-- [ ] Performance acceptable with multiple records per user
+- [x] Records sorted by sleep duration (longest first) by default
+- [x] Multiple records per user allowed in results
+- [x] Alternative sorting options (bedtime, wake_time, created_at) work
+- [x] Aggregation statistics calculated correctly
+- [x] Duration formatting is consistent across responses
+- [x] Performance acceptable with multiple records per user
 
 ---
 

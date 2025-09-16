@@ -19,7 +19,23 @@ class SleepRecord < ApplicationRecord
   scope :completed_records, -> { where.not(bedtime: nil).where.not(wake_time: nil) }
   scope :recent_records, ->(days = 7) { where(bedtime: days.days.ago..Time.current) }
   scope :by_duration, -> { order(duration_minutes: :desc) }
-  scope :for_social_feed, -> { completed_records.recent_records.by_duration }
+  scope :for_social_feed, -> { completed_records.recent_records }
+
+  # Flexible sorting scope for social feed
+  scope :apply_sorting, ->(sort_by) {
+    case sort_by
+    when 'duration'
+      order(duration_minutes: :desc)
+    when 'bedtime'
+      order(bedtime: :desc)
+    when 'wake_time'
+      order(wake_time: :desc)
+    when 'created_at'
+      order(created_at: :desc)
+    else
+      order(duration_minutes: :desc) # Default
+    end
+  }
 
   MAX_REASONABLE_SLEEP_HOURS = 24
   MIN_REASONABLE_SLEEP_MINUTES = 1

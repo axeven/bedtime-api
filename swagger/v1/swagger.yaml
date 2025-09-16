@@ -89,6 +89,13 @@ paths:
         description: Number of days to look back (1-30, default 7)
         schema:
           type: integer
+      - name: sort_by
+        in: query
+        required: false
+        description: 'Sort field: duration, bedtime, wake_time, created_at (default:
+          duration)'
+        schema:
+          type: string
       responses:
         '200':
           description: Sleep records retrieved successfully
@@ -126,6 +133,24 @@ paths:
                           format: date-time
                   total_count:
                     type: integer
+                  statistics:
+                    type: object
+                    properties:
+                      total_records:
+                        type: integer
+                      unique_users:
+                        type: integer
+                      duration_stats:
+                        type: object
+                        properties:
+                          average_minutes:
+                            type: integer
+                          longest_minutes:
+                            type: integer
+                          shortest_minutes:
+                            type: integer
+                          total_sleep_hours:
+                            type: number
                   date_range:
                     type: object
                     properties:
@@ -137,6 +162,11 @@ paths:
                       to_date:
                         type: string
                         format: date
+                  sorting:
+                    type: object
+                    properties:
+                      sort_by:
+                        type: string
         '400':
           description: Authentication required
           content:

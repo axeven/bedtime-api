@@ -18,6 +18,8 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
                 description: 'User ID for authentication'
       parameter name: :days, in: :query, type: :integer, required: false,
                 description: 'Number of days to look back (1-30, default 7)'
+      parameter name: :sort_by, in: :query, type: :string, required: false,
+                description: 'Sort field: duration, bedtime, wake_time, created_at (default: duration)'
 
       response '200', 'Sleep records retrieved successfully' do
         description 'Returns completed sleep records from followed users'
@@ -41,12 +43,34 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
                    }
                  },
                  total_count: { type: :integer },
+                 statistics: {
+                   type: :object,
+                   properties: {
+                     total_records: { type: :integer },
+                     unique_users: { type: :integer },
+                     duration_stats: {
+                       type: :object,
+                       properties: {
+                         average_minutes: { type: :integer },
+                         longest_minutes: { type: :integer },
+                         shortest_minutes: { type: :integer },
+                         total_sleep_hours: { type: :number }
+                       }
+                     }
+                   }
+                 },
                  date_range: {
                    type: :object,
                    properties: {
                      days_back: { type: :integer },
                      from_date: { type: :string, format: 'date' },
                      to_date: { type: :string, format: 'date' }
+                   }
+                 },
+                 sorting: {
+                   type: :object,
+                   properties: {
+                     sort_by: { type: :string }
                    }
                  }
                }
@@ -63,13 +87,13 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
 
             # Create completed sleep records
             followed_user1.sleep_records.create!(
-              bedtime: 2.days.ago + 22.hours,
-              wake_time: 1.day.ago + 7.hours,
+              bedtime: 1.day.ago + 22.hours,
+              wake_time: 1.day.ago + 31.hours,
               duration_minutes: 540
             )
             followed_user2.sleep_records.create!(
               bedtime: 1.day.ago + 23.hours,
-              wake_time: Time.current + 8.hours,
+              wake_time: 1.day.ago + 31.hours,
               duration_minutes: 480
             )
           end
@@ -91,6 +115,18 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
             expect(data['date_range']['days_back']).to eq(7)
             expect(data['date_range']['from_date']).to be_present
             expect(data['date_range']['to_date']).to be_present
+
+            # Check statistics structure
+            expect(data['statistics']).to be_present
+            expect(data['statistics']['total_records']).to eq(2)
+            expect(data['statistics']['unique_users']).to eq(2)
+            expect(data['statistics']['duration_stats']['average_minutes']).to be_a(Integer)
+            expect(data['statistics']['duration_stats']['longest_minutes']).to eq(540)
+            expect(data['statistics']['duration_stats']['shortest_minutes']).to eq(480)
+
+            # Check sorting structure
+            expect(data['sorting']).to be_present
+            expect(data['sorting']['sort_by']).to eq('duration')
           end
         end
 
@@ -194,6 +230,110 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
             expect(data['message']).to include('No sleep records found in the last 1 days')
           end
         end
+
+        context 'with custom sorting by duration' do
+          let!(:current_user) { User.create!(name: 'Sort Test User') }
+          let!(:followed_user1) { User.create!(name: 'Short Sleeper') }
+          let!(:followed_user2) { User.create!(name: 'Long Sleeper') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+          let(:sort_by) { 'duration' }
+
+          before do
+            current_user.follows.create!(following_user: followed_user1)
+            current_user.follows.create!(following_user: followed_user2)
+
+            # Create records with different durations
+            followed_user1.sleep_records.create!(
+              bedtime: 1.day.ago + 22.hours,
+              wake_time: 1.day.ago + 28.hours,
+              duration_minutes: 360 # 6 hours
+            )
+            followed_user2.sleep_records.create!(
+              bedtime: 1.day.ago + 21.hours,
+              wake_time: 1.day.ago + 29.hours,
+              duration_minutes: 480 # 8 hours
+            )
+          end
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['sleep_records'].size).to eq(2)
+            expect(data['sorting']['sort_by']).to eq('duration')
+
+            # Check that records are sorted by duration (longest first)
+            expect(data['sleep_records'][0]['duration_minutes']).to eq(480)
+            expect(data['sleep_records'][1]['duration_minutes']).to eq(360)
+
+            # Check statistics
+            expect(data['statistics']['duration_stats']['longest_minutes']).to eq(480)
+            expect(data['statistics']['duration_stats']['shortest_minutes']).to eq(360)
+            expect(data['statistics']['duration_stats']['average_minutes']).to eq(420)
+          end
+        end
+
+        context 'with custom sorting by bedtime' do
+          let!(:current_user) { User.create!(name: 'Bedtime Sort User') }
+          let!(:followed_user) { User.create!(name: 'Variable Bedtime User') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+          let(:sort_by) { 'bedtime' }
+
+          before do
+            current_user.follows.create!(following_user: followed_user)
+
+            # Create records with different bedtimes
+            followed_user.sleep_records.create!(
+              bedtime: 2.days.ago + 22.hours,
+              wake_time: 2.days.ago + 30.hours,
+              duration_minutes: 480
+            )
+            followed_user.sleep_records.create!(
+              bedtime: 1.day.ago + 21.hours,
+              wake_time: 1.day.ago + 29.hours,
+              duration_minutes: 480
+            )
+          end
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['sleep_records'].size).to eq(2)
+            expect(data['sorting']['sort_by']).to eq('bedtime')
+
+            # Check that records are sorted by bedtime (most recent first)
+            first_bedtime = Time.parse(data['sleep_records'][0]['bedtime'])
+            second_bedtime = Time.parse(data['sleep_records'][1]['bedtime'])
+            expect(first_bedtime).to be > second_bedtime
+          end
+        end
+
+        context 'with multiple records per user' do
+          let!(:current_user) { User.create!(name: 'Multi Record User') }
+          let!(:followed_user) { User.create!(name: 'Prolific Sleeper') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+
+          before do
+            current_user.follows.create!(following_user: followed_user)
+
+            # Create multiple records for the same user
+            3.times do |i|
+              followed_user.sleep_records.create!(
+                bedtime: (i + 1).days.ago + 22.hours,
+                wake_time: (i + 1).days.ago + (22 + 6 + i).hours,
+                duration_minutes: 360 + (i * 60) # Different durations: 360, 420, 480
+              )
+            end
+          end
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['sleep_records'].size).to eq(3)
+            expect(data['statistics']['total_records']).to eq(3)
+            expect(data['statistics']['unique_users']).to eq(1)
+
+            # Check that all records are from the same user but multiple records allowed
+            user_ids = data['sleep_records'].map { |record| record['user_id'] }.uniq
+            expect(user_ids.size).to eq(1)
+          end
+        end
       end
 
       response '400', 'Bad request' do
@@ -220,6 +360,22 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
               data = JSON.parse(response.body)
               expect(data['error_code']).to eq('INVALID_DATE_RANGE')
               expect(data['error']).to include('Date range must be between 1 and 30 days')
+            end
+          end
+        end
+
+        context 'with invalid sort parameters' do
+          let!(:current_user) { User.create!(name: 'Sort Error User') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+
+          context 'invalid sort_by parameter' do
+            let(:sort_by) { 'invalid_sort' }
+
+            run_test! do |response|
+              data = JSON.parse(response.body)
+              expect(data['error_code']).to eq('INVALID_SORT_PARAMETER')
+              expect(data['error']).to include('Invalid sort parameter')
+              expect(data['details']['allowed_values']).to include('duration', 'bedtime', 'wake_time', 'created_at')
             end
           end
         end
