@@ -20,6 +20,10 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
                 description: 'Number of days to look back (1-30, default 7)'
       parameter name: :sort_by, in: :query, type: :string, required: false,
                 description: 'Sort field: duration, bedtime, wake_time, created_at (default: duration)'
+      parameter name: :limit, in: :query, type: :integer, required: false,
+                description: 'Number of results per page (1-100, default 20)'
+      parameter name: :offset, in: :query, type: :integer, required: false,
+                description: 'Starting position (default 0)'
 
       response '200', 'Sleep records retrieved successfully' do
         description 'Returns completed sleep records from followed users'
@@ -43,7 +47,18 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
                      }
                    }
                  },
-                 total_count: { type: :integer },
+                 pagination: {
+                   type: :object,
+                   properties: {
+                     total_count: { type: :integer },
+                     current_count: { type: :integer },
+                     limit: { type: :integer },
+                     offset: { type: :integer },
+                     has_more: { type: :boolean },
+                     next_offset: { type: :integer, nullable: true },
+                     previous_offset: { type: :integer, nullable: true }
+                   }
+                 },
                  statistics: {
                    type: :object,
                    properties: {
@@ -112,7 +127,7 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
             data = JSON.parse(response.body)
             expect(data['sleep_records']).to be_an(Array)
             expect(data['sleep_records'].size).to eq(2)
-            expect(data['total_count']).to eq(2)
+            expect(data['pagination']['total_count']).to eq(2)
 
             # Check record structure
             record = data['sleep_records'].first
@@ -158,7 +173,7 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
             data = JSON.parse(response.body)
             expect(data['sleep_records']).to be_an(Array)
             expect(data['sleep_records']).to be_empty
-            expect(data['total_count']).to eq(0)
+            expect(data['pagination']['total_count']).to eq(0)
             expect(data['message']).to include('Follow users to see their sleep data')
 
             # Check date_range structure for empty results
@@ -185,7 +200,7 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
             data = JSON.parse(response.body)
             expect(data['sleep_records']).to be_an(Array)
             expect(data['sleep_records']).to be_empty
-            expect(data['total_count']).to eq(0)
+            expect(data['pagination']['total_count']).to eq(0)
             expect(data['message']).to include('No completed sleep records found')
 
             # Check date_range structure for empty results
@@ -245,7 +260,7 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
           run_test! do |response|
             data = JSON.parse(response.body)
             expect(data['sleep_records']).to be_empty
-            expect(data['total_count']).to eq(0)
+            expect(data['pagination']['total_count']).to eq(0)
             expect(data['date_range']['days_back']).to eq(1)
             expect(data['message']).to include('No completed sleep records found from the 1 users you follow in the last 1 days')
           end
@@ -444,11 +459,94 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
 
             # Should exclude all incomplete records
             expect(data['sleep_records']).to be_empty
-            expect(data['total_count']).to eq(0)
+            expect(data['pagination']['total_count']).to eq(0)
 
             # Message should indicate no completed records
             expect(data['message']).to include('No completed sleep records found')
             expect(data['privacy_info']['following_count']).to eq(1)
+          end
+        end
+
+        context 'with pagination' do
+          let!(:current_user) { User.create!(name: 'Pagination User') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+          let(:limit) { 3 }
+          let(:offset) { 0 }
+
+          before do
+            # Create multiple followed users with multiple sleep records each
+            3.times do |i|
+              user = User.create!(name: "Sleeper #{i + 1}")
+              current_user.follows.create!(following_user: user)
+
+              # Create 4 sleep records per user (total 12 records)
+              4.times do |j|
+                user.sleep_records.create!(
+                  bedtime: (j + 1).days.ago + 22.hours,
+                  wake_time: (j + 1).days.ago + (22 + 8).hours,
+                  duration_minutes: 480 + (i * 60) + (j * 15)
+                )
+              end
+            end
+          end
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+
+            # Should return only the requested limit
+            expect(data['sleep_records'].size).to eq(3)
+
+            # Pagination metadata should be accurate
+            expect(data['pagination']['total_count']).to eq(12)
+            expect(data['pagination']['current_count']).to eq(3)
+            expect(data['pagination']['limit']).to eq(3)
+            expect(data['pagination']['offset']).to eq(0)
+            expect(data['pagination']['has_more']).to be(true)
+            expect(data['pagination']['next_offset']).to eq(3)
+            expect(data['pagination']['previous_offset']).to be_nil
+
+            # Statistics should be calculated from full dataset, not just current page
+            expect(data['statistics']['total_records']).to eq(12)
+            expect(data['statistics']['unique_users']).to eq(3)
+          end
+        end
+
+        context 'with pagination - second page' do
+          let!(:current_user) { User.create!(name: 'Pagination User 2') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+          let(:limit) { 5 }
+          let(:offset) { 5 }
+
+          before do
+            # Create 8 sleep records across 2 users
+            2.times do |i|
+              user = User.create!(name: "Sleeper #{i + 1}")
+              current_user.follows.create!(following_user: user)
+
+              4.times do |j|
+                user.sleep_records.create!(
+                  bedtime: (j + 1).days.ago + 22.hours,
+                  wake_time: (j + 1).days.ago + 30.hours,
+                  duration_minutes: 480 + (i * 60) + (j * 15)
+                )
+              end
+            end
+          end
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+
+            # Should return remaining records (3 out of 8 total)
+            expect(data['sleep_records'].size).to eq(3)
+
+            # Pagination metadata for second page
+            expect(data['pagination']['total_count']).to eq(8)
+            expect(data['pagination']['current_count']).to eq(3)
+            expect(data['pagination']['limit']).to eq(5)
+            expect(data['pagination']['offset']).to eq(5)
+            expect(data['pagination']['has_more']).to be(false)
+            expect(data['pagination']['next_offset']).to be_nil
+            expect(data['pagination']['previous_offset']).to eq(0)
           end
         end
       end
@@ -493,6 +591,41 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
               expect(data['error_code']).to eq('INVALID_SORT_PARAMETER')
               expect(data['error']).to include('Invalid sort parameter')
               expect(data['details']['allowed_values']).to include('duration', 'bedtime', 'wake_time', 'created_at')
+            end
+          end
+        end
+
+        context 'with invalid pagination parameters' do
+          let!(:current_user) { User.create!(name: 'Pagination Error User') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+
+          context 'limit parameter too large' do
+            let(:limit) { 150 }
+
+            run_test! do |response|
+              data = JSON.parse(response.body)
+              expect(data['error_code']).to eq('INVALID_PAGINATION_LIMIT')
+              expect(data['error']).to include('Limit must be between 1 and 100')
+            end
+          end
+
+          context 'limit parameter too small' do
+            let(:limit) { 0 }
+
+            run_test! do |response|
+              data = JSON.parse(response.body)
+              expect(data['error_code']).to eq('INVALID_PAGINATION_LIMIT')
+              expect(data['error']).to include('Limit must be between 1 and 100')
+            end
+          end
+
+          context 'negative offset parameter' do
+            let(:offset) { -5 }
+
+            run_test! do |response|
+              data = JSON.parse(response.body)
+              expect(data['error_code']).to eq('INVALID_PAGINATION_OFFSET')
+              expect(data['error']).to include('Offset must be non-negative')
             end
           end
         end

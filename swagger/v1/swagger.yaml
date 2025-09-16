@@ -96,6 +96,18 @@ paths:
           duration)'
         schema:
           type: string
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page (1-100, default 20)
+        schema:
+          type: integer
+      - name: offset
+        in: query
+        required: false
+        description: Starting position (default 0)
+        schema:
+          type: integer
       responses:
         '200':
           description: Sleep records retrieved successfully
@@ -133,8 +145,25 @@ paths:
                           format: date-time
                         record_complete:
                           type: boolean
-                  total_count:
-                    type: integer
+                  pagination:
+                    type: object
+                    properties:
+                      total_count:
+                        type: integer
+                      current_count:
+                        type: integer
+                      limit:
+                        type: integer
+                      offset:
+                        type: integer
+                      has_more:
+                        type: boolean
+                      next_offset:
+                        type: integer
+                        nullable: true
+                      previous_offset:
+                        type: integer
+                        nullable: true
                   statistics:
                     type: object
                     properties:
