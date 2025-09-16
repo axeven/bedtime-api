@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_15_040837) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_16_114714) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,9 +19,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_15_040837) do
     t.bigint "following_user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["following_user_id"], name: "index_follows_on_following_user_id"
+    t.index ["following_user_id", "created_at"], name: "idx_follows_following_created"
+    t.index ["user_id", "created_at"], name: "idx_follows_user_created"
     t.index ["user_id", "following_user_id"], name: "index_follows_on_user_id_and_following_user_id", unique: true
-    t.index ["user_id"], name: "index_follows_on_user_id"
   end
 
   create_table "sleep_records", force: :cascade do |t|
@@ -31,19 +31,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_15_040837) do
     t.integer "duration_minutes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["bedtime", "wake_time"], name: "index_sleep_records_on_completion_and_date"
-    t.index ["bedtime"], name: "index_sleep_records_on_bedtime"
-    t.index ["duration_minutes"], name: "index_sleep_records_on_duration"
-    t.index ["user_id", "bedtime", "wake_time", "duration_minutes"], name: "index_sleep_records_social_feed"
-    t.index ["user_id", "bedtime"], name: "index_sleep_records_on_user_and_bedtime"
-    t.index ["user_id", "bedtime"], name: "index_sleep_records_on_user_id_and_bedtime"
-    t.index ["user_id"], name: "index_sleep_records_on_user_id"
+    t.index ["bedtime"], name: "idx_sleep_records_bedtime"
+    t.index ["user_id", "bedtime"], name: "idx_sleep_records_user_bedtime"
+    t.index ["user_id", "bedtime"], name: "idx_sleep_records_user_completed", where: "(wake_time IS NOT NULL)"
+    t.index ["user_id"], name: "idx_sleep_records_active", where: "(wake_time IS NULL)"
   end
 
   create_table "users", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["name"], name: "idx_users_name"
   end
 
   add_foreign_key "follows", "users"
