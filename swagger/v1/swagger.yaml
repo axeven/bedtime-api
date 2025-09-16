@@ -131,6 +131,8 @@ paths:
                         created_at:
                           type: string
                           format: date-time
+                        record_complete:
+                          type: boolean
                   total_count:
                     type: integer
                   statistics:
@@ -167,6 +169,17 @@ paths:
                     properties:
                       sort_by:
                         type: string
+                  privacy_info:
+                    type: object
+                    properties:
+                      data_source:
+                        type: string
+                      record_types:
+                        type: string
+                      your_records_included:
+                        type: boolean
+                      following_count:
+                        type: integer
         '400':
           description: Authentication required
           content:

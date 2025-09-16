@@ -10,6 +10,9 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
                                .recent_records(days_back)
                                .apply_sorting(sort_by)
 
+    # Log access for audit purposes
+    log_social_data_access(sleep_records.count)
+
     if sleep_records.empty?
       render_success({
         sleep_records: [],
@@ -17,7 +20,8 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
         statistics: generate_empty_statistics,
         date_range: date_range_info(days_back),
         sorting: { sort_by: sort_by },
-        message: "No sleep records found in the last #{days_back} days. Follow users to see their sleep data!"
+        privacy_info: privacy_info,
+        message: determine_empty_message(days_back)
       })
       return
     end
@@ -32,7 +36,8 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
         duration_minutes: record.duration_minutes,
         formatted_duration: record.formatted_duration,
         sleep_date: record.sleep_date.iso8601,
-        created_at: record.created_at.iso8601
+        created_at: record.created_at.iso8601,
+        record_complete: record.complete_record?
       }
     end
 
@@ -43,11 +48,35 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
       total_count: records_data.length,
       statistics: statistics,
       date_range: date_range_info(days_back),
-      sorting: { sort_by: sort_by }
+      sorting: { sort_by: sort_by },
+      privacy_info: privacy_info
     })
   end
 
   private
+
+  def log_social_data_access(record_count)
+    Rails.logger.info "User #{current_user.id} accessed #{record_count} social sleep records"
+  end
+
+  def privacy_info
+    {
+      data_source: 'followed_users_only',
+      record_types: 'completed_records_only',
+      your_records_included: false,
+      following_count: current_user.following_users.count
+    }
+  end
+
+  def determine_empty_message(days_back)
+    following_count = current_user.following_users.count
+
+    if following_count == 0
+      "You're not following anyone yet. Follow users to see their sleep data!"
+    else
+      "No completed sleep records found from the #{following_count} users you follow in the last #{days_back} days."
+    end
+  end
 
   def validate_sort_params
     allowed_sorts = %w[duration bedtime wake_time created_at]

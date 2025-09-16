@@ -5,14 +5,14 @@ This document provides a detailed implementation plan for Phase 4 of the Bedtime
 
 **Note**: This phase builds on the social following system from Phase 3 and the sleep record functionality from Phase 2. All API endpoints should be documented using rswag specs which automatically generate OpenAPI documentation. Authentication helpers and patterns are available in `spec/support/` directory.
 
-## Phase Status: 🟡 In Progress (4/7 steps completed)
+## Phase Status: 🟡 In Progress (5/7 steps completed)
 
 ### Progress Summary
 - ✅ **Step 1**: Social Sleep Data Model Enhancements - **COMPLETED**
 - ✅ **Step 2**: Following Users' Sleep Records Endpoint - **COMPLETED**
 - ✅ **Step 3**: Date Range Filtering Implementation - **COMPLETED**
 - ✅ **Step 4**: Duration-Based Sorting & Aggregation - **COMPLETED**
-- ⬜ **Step 5**: Complete Records Filter & Privacy Controls - **Not Started**
+- ✅ **Step 5**: Complete Records Filter & Privacy Controls - **COMPLETED**
 - ⬜ **Step 6**: Pagination & Performance Optimization - **Not Started**
 - ⬜ **Step 7**: Integration Testing & Manual Validation - **Not Started**
 
@@ -601,25 +601,25 @@ statistics: {
 **Goal**: Ensure only complete sleep records are shown and privacy controls are enforced
 
 ### Tasks Checklist
-- [ ] Enforce complete records filter (both bedtime and wake_time required)
-- [ ] Add privacy validation (only followed users' data)
-- [ ] Implement user blocking/privacy preference support (future-ready)
-- [ ] Add data visibility controls
-- [ ] Create audit logging for social data access
-- [ ] Add user identification and attribution
+- [x] Enforce complete records filter (both bedtime and wake_time required)
+- [x] Add privacy validation (only followed users' data)
+- [x] Implement user blocking/privacy preference support (future-ready)
+- [x] Add data visibility controls
+- [x] Create audit logging for social data access
+- [x] Add user identification and attribution
 
 ### Tests to Write First
 **Use rswag and standard RSpec**
 
-- [ ] rswag API specs for privacy controls (extend existing spec file)
-  - [ ] Only complete records (bedtime + wake_time) included
-  - [ ] Non-followed users' records excluded
-  - [ ] Privacy controls respected
-  - [ ] User identification accurate
-- [ ] Privacy enforcement tests (standard RSpec)
-  - [ ] Incomplete records filtered out
-  - [ ] Unfollowed users' data not accessible
-  - [ ] Current user's own records excluded from social feed
+- [x] rswag API specs for privacy controls (extend existing spec file)
+  - [x] Only complete records (bedtime + wake_time) included
+  - [x] Non-followed users' records excluded
+  - [x] Privacy controls respected
+  - [x] User identification accurate
+- [x] Privacy enforcement tests (standard RSpec)
+  - [x] Incomplete records filtered out
+  - [x] Unfollowed users' data not accessible
+  - [x] Current user's own records excluded from social feed
 
 ### Implementation Details
 ```ruby
@@ -800,12 +800,12 @@ end
 ```
 
 ### Acceptance Criteria
-- [ ] Only complete records (bedtime + wake_time + duration) included
-- [ ] Only followed users' sleep records accessible
-- [ ] Current user's own records excluded from social feed
-- [ ] Privacy information included in API response
-- [ ] Audit logging implemented for data access
-- [ ] Clear messaging when no records meet privacy criteria
+- [x] Only complete records (bedtime + wake_time + duration) included
+- [x] Only followed users' sleep records accessible
+- [x] Current user's own records excluded from social feed
+- [x] Privacy information included in API response
+- [x] Audit logging implemented for data access
+- [x] Clear messaging when no records meet privacy criteria
 
 ---
 

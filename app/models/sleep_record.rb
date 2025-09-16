@@ -16,7 +16,11 @@ class SleepRecord < ApplicationRecord
   scope :recent_first, -> { order(bedtime: :desc) }
 
   # Social feed scopes for retrieving sleep data from followed users
-  scope :completed_records, -> { where.not(bedtime: nil).where.not(wake_time: nil) }
+  scope :completed_records, -> {
+    where.not(bedtime: nil)
+         .where.not(wake_time: nil)
+         .where.not(duration_minutes: nil)
+  }
   scope :recent_records, ->(days = 7) { where(bedtime: days.days.ago..Time.current) }
   scope :by_duration, -> { order(duration_minutes: :desc) }
   scope :for_social_feed, -> { completed_records.recent_records }
@@ -58,8 +62,10 @@ class SleepRecord < ApplicationRecord
     followed_user_ids = user.following_users.pluck(:id)
     return none if followed_user_ids.empty?
 
+    # Explicitly exclude the requesting user's own records
     includes(:user)
       .where(user_id: followed_user_ids)
+      .where.not(user_id: user.id)
       .for_social_feed
   end
 
@@ -83,6 +89,16 @@ class SleepRecord < ApplicationRecord
     hours = duration_minutes / 60
     minutes = duration_minutes % 60
     "#{hours}h #{minutes}m"
+  end
+
+  # Privacy and validation helpers
+  def complete_record?
+    bedtime.present? && wake_time.present? && duration_minutes.present?
+  end
+
+  def accessible_by?(requesting_user)
+    return true if user_id == requesting_user.id
+    requesting_user.following?(user)
   end
 
   private

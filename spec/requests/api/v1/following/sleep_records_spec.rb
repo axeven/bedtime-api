@@ -38,7 +38,8 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
                        duration_minutes: { type: :integer },
                        formatted_duration: { type: :string },
                        sleep_date: { type: :string, format: 'date' },
-                       created_at: { type: :string, format: 'date-time' }
+                       created_at: { type: :string, format: 'date-time' },
+                       record_complete: { type: :boolean }
                      }
                    }
                  },
@@ -71,6 +72,15 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
                    type: :object,
                    properties: {
                      sort_by: { type: :string }
+                   }
+                 },
+                 privacy_info: {
+                   type: :object,
+                   properties: {
+                     data_source: { type: :string },
+                     record_types: { type: :string },
+                     your_records_included: { type: :boolean },
+                     following_count: { type: :integer }
                    }
                  }
                }
@@ -127,6 +137,16 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
             # Check sorting structure
             expect(data['sorting']).to be_present
             expect(data['sorting']['sort_by']).to eq('duration')
+
+            # Check privacy structure
+            expect(data['privacy_info']).to be_present
+            expect(data['privacy_info']['data_source']).to eq('followed_users_only')
+            expect(data['privacy_info']['record_types']).to eq('completed_records_only')
+            expect(data['privacy_info']['your_records_included']).to be(false)
+            expect(data['privacy_info']['following_count']).to eq(2)
+
+            # Check record_complete field
+            expect(data['sleep_records'][0]['record_complete']).to be(true)
           end
         end
 
@@ -166,7 +186,7 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
             expect(data['sleep_records']).to be_an(Array)
             expect(data['sleep_records']).to be_empty
             expect(data['total_count']).to eq(0)
-            expect(data['message']).to include('No sleep records found')
+            expect(data['message']).to include('No completed sleep records found')
 
             # Check date_range structure for empty results
             expect(data['date_range']).to be_present
@@ -227,7 +247,7 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
             expect(data['sleep_records']).to be_empty
             expect(data['total_count']).to eq(0)
             expect(data['date_range']['days_back']).to eq(1)
-            expect(data['message']).to include('No sleep records found in the last 1 days')
+            expect(data['message']).to include('No completed sleep records found from the 1 users you follow in the last 1 days')
           end
         end
 
@@ -332,6 +352,103 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
             # Check that all records are from the same user but multiple records allowed
             user_ids = data['sleep_records'].map { |record| record['user_id'] }.uniq
             expect(user_ids.size).to eq(1)
+          end
+        end
+
+        context 'privacy controls validation' do
+          let!(:current_user) { User.create!(name: 'Privacy User') }
+          let!(:followed_user) { User.create!(name: 'Followed User') }
+          let!(:non_followed_user) { User.create!(name: 'Non-Followed User') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+
+          before do
+            current_user.follows.create!(following_user: followed_user)
+
+            # Create complete record for followed user (should be included)
+            followed_user.sleep_records.create!(
+              bedtime: 1.day.ago + 22.hours,
+              wake_time: 1.day.ago + 30.hours,
+              duration_minutes: 480
+            )
+
+            # Create complete record for non-followed user (should be excluded)
+            non_followed_user.sleep_records.create!(
+              bedtime: 1.day.ago + 23.hours,
+              wake_time: 1.day.ago + 31.hours,
+              duration_minutes: 540
+            )
+
+            # Create incomplete record for followed user (should be excluded)
+            followed_user.sleep_records.create!(
+              bedtime: 1.day.ago + 21.hours,
+              wake_time: nil,
+              duration_minutes: nil
+            )
+
+            # Create current user's own record (should be excluded from social feed)
+            current_user.sleep_records.create!(
+              bedtime: 1.day.ago + 22.5.hours,
+              wake_time: 1.day.ago + 30.5.hours,
+              duration_minutes: 500
+            )
+          end
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+
+            # Should only include the complete record from followed user
+            expect(data['sleep_records'].size).to eq(1)
+            expect(data['sleep_records'][0]['user_id']).to eq(followed_user.id)
+            expect(data['sleep_records'][0]['duration_minutes']).to eq(480)
+            expect(data['sleep_records'][0]['record_complete']).to be(true)
+
+            # Privacy info should be accurate
+            expect(data['privacy_info']['data_source']).to eq('followed_users_only')
+            expect(data['privacy_info']['record_types']).to eq('completed_records_only')
+            expect(data['privacy_info']['your_records_included']).to be(false)
+            expect(data['privacy_info']['following_count']).to eq(1)
+
+            # Statistics should only include the one valid record
+            expect(data['statistics']['total_records']).to eq(1)
+            expect(data['statistics']['unique_users']).to eq(1)
+            expect(data['statistics']['duration_stats']['longest_minutes']).to eq(480)
+          end
+        end
+
+        context 'complete records filtering' do
+          let!(:current_user) { User.create!(name: 'Complete Records User') }
+          let!(:followed_user) { User.create!(name: 'Incomplete Sleeper') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+
+          before do
+            current_user.follows.create!(following_user: followed_user)
+
+            # Create incomplete record (missing wake_time)
+            followed_user.sleep_records.create!(
+              bedtime: 1.day.ago + 22.hours,
+              wake_time: nil,
+              duration_minutes: nil
+            )
+
+            # Create record and manually set duration_minutes to nil after creation
+            incomplete_record = followed_user.sleep_records.create!(
+              bedtime: 1.day.ago + 20.hours,
+              wake_time: 1.day.ago + 28.hours
+            )
+            # Manually set duration_minutes to nil to test filtering
+            incomplete_record.update_column(:duration_minutes, nil)
+          end
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+
+            # Should exclude all incomplete records
+            expect(data['sleep_records']).to be_empty
+            expect(data['total_count']).to eq(0)
+
+            # Message should indicate no completed records
+            expect(data['message']).to include('No completed sleep records found')
+            expect(data['privacy_info']['following_count']).to eq(1)
           end
         end
       end
