@@ -15,6 +15,12 @@ class SleepRecord < ApplicationRecord
   scope :for_user, ->(user) { where(user: user) }
   scope :recent_first, -> { order(bedtime: :desc) }
 
+  # Optimized scopes for better performance
+  scope :with_duration, -> { completed.where.not(duration_minutes: nil) }
+  scope :recent_completed, -> { completed.where(bedtime: 7.days.ago..Time.current) }
+  scope :long_sleeps, -> { completed.where('duration_minutes >= ?', 480) } # 8+ hours
+  scope :short_sleeps, -> { completed.where('duration_minutes <= ?', 300) } # 5- hours
+
   # Social feed scopes for retrieving sleep data from followed users
   scope :completed_records, -> {
     where.not(bedtime: nil)
@@ -59,14 +65,12 @@ class SleepRecord < ApplicationRecord
 
   # Social feed query methods for retrieving sleep records from followed users
   def self.social_feed_for_user(user)
-    followed_user_ids = user.following_users.pluck(:id)
-    return none if followed_user_ids.empty?
-
-    # Explicitly exclude the requesting user's own records
-    includes(:user)
-      .where(user_id: followed_user_ids)
-      .where.not(user_id: user.id)
-      .for_social_feed
+    # Single optimized query with joins to eliminate N+1
+    joins(user: :follower_relationships)
+      .where(follows: { user_id: user.id })
+      .where.not(wake_time: nil)
+      .includes(:user)
+      .select('sleep_records.*, users.name as user_name')
   end
 
   def self.social_feed_with_pagination(user, limit: 20, offset: 0)

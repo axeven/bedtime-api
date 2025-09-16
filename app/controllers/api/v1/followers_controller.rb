@@ -1,4 +1,6 @@
 class Api::V1::FollowersController < Api::V1::BaseController
+  include QueryCountable
+
   before_action :authenticate_user
 
   def index

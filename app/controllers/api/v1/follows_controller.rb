@@ -1,4 +1,6 @@
 class Api::V1::FollowsController < Api::V1::BaseController
+  include QueryCountable
+
   before_action :authenticate_user
 
   def create

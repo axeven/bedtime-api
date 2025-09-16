@@ -1,4 +1,6 @@
 class Api::V1::SleepRecordsController < Api::V1::BaseController
+  include QueryCountable
+
   before_action :authenticate_user
   before_action :set_sleep_record, only: [ :show, :update, :destroy ]
 
@@ -80,40 +82,27 @@ class Api::V1::SleepRecordsController < Api::V1::BaseController
   end
 
   def index
+    # Base relation without select to allow counting
     sleep_records = current_user.sleep_records.recent_first
 
-    # Apply filters if provided
+    # Apply filters efficiently
     sleep_records = sleep_records.completed if params[:completed] == "true"
     sleep_records = sleep_records.active if params[:active] == "true"
 
-    # Apply pagination
-    limit = [ params[:limit]&.to_i || 20, 100 ].min # Max 100 records
+    # Optimized pagination with count query
+    limit = [ params[:limit]&.to_i || 20, 100 ].min
     offset = params[:offset]&.to_i || 0
 
-    paginated_records = sleep_records.limit(limit).offset(offset)
+    # Get count first, then select specific columns for data
     total_count = sleep_records.count
-
-    records_data = paginated_records.map do |record|
-      {
-        id: record.id,
-        user_id: record.user_id,
-        bedtime: record.bedtime.iso8601,
-        wake_time: record.wake_time&.iso8601,
-        duration_minutes: record.duration_minutes,
-        active: record.active?,
-        created_at: record.created_at.iso8601,
-        updated_at: record.updated_at.iso8601
-      }
-    end
+    records_with_count = sleep_records
+                        .select(:id, :bedtime, :wake_time, :duration_minutes, :created_at, :updated_at, :user_id)
+                        .limit(limit)
+                        .offset(offset)
 
     render_success({
-      sleep_records: records_data,
-      pagination: {
-        total_count: total_count,
-        limit: limit,
-        offset: offset,
-        has_more: (offset + limit) < total_count
-      }
+      sleep_records: serialize_sleep_records(records_with_count),
+      pagination: build_pagination_metadata(total_count, limit, offset)
     })
   end
 
@@ -147,6 +136,30 @@ class Api::V1::SleepRecordsController < Api::V1::BaseController
   end
 
   private
+
+  def serialize_sleep_records(records)
+    records.map do |record|
+      {
+        id: record.id,
+        user_id: record.user_id,
+        bedtime: record.bedtime.iso8601,
+        wake_time: record.wake_time&.iso8601,
+        duration_minutes: record.duration_minutes,
+        active: record.wake_time.nil?,
+        created_at: record.created_at.iso8601,
+        updated_at: record.updated_at.iso8601
+      }
+    end
+  end
+
+  def build_pagination_metadata(total_count, limit, offset)
+    {
+      total_count: total_count,
+      limit: limit,
+      offset: offset,
+      has_more: (offset + limit) < total_count
+    }
+  end
 
   def set_sleep_record
     @sleep_record = current_user.sleep_records.find(params[:id])

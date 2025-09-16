@@ -196,6 +196,47 @@ module PerformanceHelper
     results
   end
 
+  # Helper to detect N+1 queries
+  def detect_n_plus_one(collection_size, &block)
+    result = count_queries(&block)
+
+    if result[:query_count] > collection_size + 5 # Allow some base queries
+      Rails.logger.warn "POTENTIAL N+1 DETECTED: #{result[:query_count]} queries for #{collection_size} records"
+    end
+
+    result[:result]
+  end
+
+  # Optimized pagination helper that minimizes queries
+  def optimized_paginate(relation, limit:, offset:)
+    # Use a single query to get both data and count efficiently
+    total_count = relation.count
+    records = relation.limit(limit).offset(offset).to_a
+
+    {
+      records: records,
+      total_count: total_count,
+      has_more: (offset + limit) < total_count,
+      limit: limit,
+      offset: offset
+    }
+  end
+
+  # Batch loading helper to prevent N+1
+  def batch_load(records, association_name)
+    ActiveRecord::Associations::Preloader.new.preload(records, association_name)
+    records
+  end
+
+  # Optimized serialization helper
+  def serialize_collection(records, serializer_method = :to_h)
+    if records.respond_to?(:map)
+      records.map(&serializer_method)
+    else
+      records.send(serializer_method)
+    end
+  end
+
   private
 
   def current_memory_usage

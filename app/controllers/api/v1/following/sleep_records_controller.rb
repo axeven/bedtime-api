@@ -1,4 +1,6 @@
 class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
+  include QueryCountable
+
   before_action :validate_date_params
   before_action :validate_sort_params
   before_action :validate_pagination_params
@@ -180,19 +182,27 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
   end
 
   def generate_statistics_from_base_query(base_query)
-    # Use database aggregation for efficiency
-    durations = base_query.pluck(:duration_minutes).compact
+    # Single SQL query for all aggregations to reduce database round trips
+    stats_sql = base_query
+      .select(
+        'COUNT(*) as total_records',
+        'AVG(duration_minutes) as avg_duration',
+        'MIN(duration_minutes) as min_duration',
+        'MAX(duration_minutes) as max_duration',
+        'SUM(duration_minutes) as total_duration',
+        'COUNT(DISTINCT user_id) as unique_users'
+      ).first
 
-    return generate_empty_statistics if durations.empty?
+    return generate_empty_statistics if stats_sql.total_records == 0
 
     {
-      total_records: durations.count,
-      unique_users: base_query.distinct.count(:user_id),
+      total_records: stats_sql.total_records,
+      unique_users: stats_sql.unique_users,
       duration_stats: {
-        average_minutes: (durations.sum.to_f / durations.count).round,
-        longest_minutes: durations.max,
-        shortest_minutes: durations.min,
-        total_sleep_hours: (durations.sum.to_f / 60).round(1)
+        average_minutes: stats_sql.avg_duration&.round(1),
+        longest_minutes: stats_sql.max_duration,
+        shortest_minutes: stats_sql.min_duration,
+        total_sleep_hours: (stats_sql.total_duration.to_f / 60).round(1)
       }
     }
   end
