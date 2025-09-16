@@ -5,12 +5,12 @@ This document provides a detailed implementation plan for Phase 4 of the Bedtime
 
 **Note**: This phase builds on the social following system from Phase 3 and the sleep record functionality from Phase 2. All API endpoints should be documented using rswag specs which automatically generate OpenAPI documentation. Authentication helpers and patterns are available in `spec/support/` directory.
 
-## Phase Status: 🟡 In Progress (2/7 steps completed)
+## Phase Status: 🟡 In Progress (3/7 steps completed)
 
 ### Progress Summary
 - ✅ **Step 1**: Social Sleep Data Model Enhancements - **COMPLETED**
 - ✅ **Step 2**: Following Users' Sleep Records Endpoint - **COMPLETED**
-- ⬜ **Step 3**: Date Range Filtering Implementation - **Not Started**
+- ✅ **Step 3**: Date Range Filtering Implementation - **COMPLETED**
 - ⬜ **Step 4**: Duration-Based Sorting & Aggregation - **Not Started**
 - ⬜ **Step 5**: Complete Records Filter & Privacy Controls - **Not Started**
 - ⬜ **Step 6**: Pagination & Performance Optimization - **Not Started**
@@ -295,21 +295,21 @@ end
 **Goal**: Add filtering to limit sleep records to the last 7 days
 
 ### Tasks Checklist
-- [ ] Add date filtering to social sleep records endpoint
-- [ ] Implement query parameter for date range customization
-- [ ] Add validation for date range parameters
-- [ ] Update database queries to use date indexes efficiently
-- [ ] Add date range information to API response
+- [x] Add date filtering to social sleep records endpoint
+- [x] Implement query parameter for date range customization
+- [x] Add validation for date range parameters
+- [x] Update database queries to use date indexes efficiently
+- [x] Add date range information to API response
 
 ### Tests to Write First
 **Use rswag for API documentation**
 
-- [ ] rswag API specs for date filtering (extend existing spec file)
-  - [ ] Default behavior (last 7 days) works correctly
-  - [ ] Custom date range parameter works
-  - [ ] Invalid date parameters handled gracefully
-  - [ ] Records outside date range excluded
-  - [ ] Date range metadata included in response
+- [x] rswag API specs for date filtering (extend existing spec file)
+  - [x] Default behavior (last 7 days) works correctly
+  - [x] Custom date range parameter works
+  - [x] Invalid date parameters handled gracefully
+  - [x] Records outside date range excluded
+  - [x] Date range metadata included in response
 
 ### Implementation Details
 ```ruby
@@ -409,12 +409,12 @@ end
 ```
 
 ### Acceptance Criteria
-- [ ] Default behavior filters to last 7 days
-- [ ] Custom date range parameter (1-30 days) works correctly
-- [ ] Invalid date range parameters return clear error messages
-- [ ] Date range metadata included in API response
-- [ ] Database queries use date indexes efficiently
-- [ ] Records outside specified date range excluded
+- [x] Default behavior filters to last 7 days
+- [x] Custom date range parameter (1-30 days) works correctly
+- [x] Invalid date range parameters return clear error messages
+- [x] Date range metadata included in API response
+- [x] Database queries use date indexes efficiently
+- [x] Records outside specified date range excluded
 
 ---
 

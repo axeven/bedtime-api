@@ -16,6 +16,8 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
 
       parameter name: 'X-USER-ID', in: :header, type: :string, required: true,
                 description: 'User ID for authentication'
+      parameter name: :days, in: :query, type: :integer, required: false,
+                description: 'Number of days to look back (1-30, default 7)'
 
       response '200', 'Sleep records retrieved successfully' do
         description 'Returns completed sleep records from followed users'
@@ -38,7 +40,15 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
                      }
                    }
                  },
-                 total_count: { type: :integer }
+                 total_count: { type: :integer },
+                 date_range: {
+                   type: :object,
+                   properties: {
+                     days_back: { type: :integer },
+                     from_date: { type: :string, format: 'date' },
+                     to_date: { type: :string, format: 'date' }
+                   }
+                 }
                }
 
         context 'with followed users having sleep records' do
@@ -75,6 +85,12 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
             expect(record).to have_key('user_name')
             expect(record).to have_key('duration_minutes')
             expect(record).to have_key('formatted_duration')
+
+            # Check date_range structure
+            expect(data['date_range']).to be_present
+            expect(data['date_range']['days_back']).to eq(7)
+            expect(data['date_range']['from_date']).to be_present
+            expect(data['date_range']['to_date']).to be_present
           end
         end
 
@@ -88,6 +104,10 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
             expect(data['sleep_records']).to be_empty
             expect(data['total_count']).to eq(0)
             expect(data['message']).to include('Follow users to see their sleep data')
+
+            # Check date_range structure for empty results
+            expect(data['date_range']).to be_present
+            expect(data['date_range']['days_back']).to eq(7)
           end
         end
 
@@ -111,6 +131,96 @@ RSpec.describe 'api/v1/following/sleep_records', type: :request do
             expect(data['sleep_records']).to be_empty
             expect(data['total_count']).to eq(0)
             expect(data['message']).to include('No sleep records found')
+
+            # Check date_range structure for empty results
+            expect(data['date_range']).to be_present
+            expect(data['date_range']['days_back']).to eq(7)
+          end
+        end
+
+        context 'with custom date range' do
+          let!(:current_user) { User.create!(name: 'Date Range User') }
+          let!(:followed_user) { User.create!(name: 'Date Range Sleeper') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+          let(:days) { 3 }
+
+          before do
+            current_user.follows.create!(following_user: followed_user)
+
+            # Create sleep records - some within range, some outside
+            followed_user.sleep_records.create!(
+              bedtime: 2.days.ago + 22.hours,
+              wake_time: 2.days.ago + 30.hours,
+              duration_minutes: 480
+            )
+            followed_user.sleep_records.create!(
+              bedtime: 5.days.ago + 22.hours,
+              wake_time: 5.days.ago + 30.hours,
+              duration_minutes: 480
+            )
+          end
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['sleep_records'].size).to eq(1) # Only record within 3 days
+            expect(data['date_range']['days_back']).to eq(3)
+            expect(data['date_range']['from_date']).to be_present
+            expect(data['date_range']['to_date']).to be_present
+          end
+        end
+
+        context 'with records outside date range' do
+          let!(:current_user) { User.create!(name: 'Range Test User') }
+          let!(:followed_user) { User.create!(name: 'Range Test Sleeper') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+          let(:days) { 1 }
+
+          before do
+            current_user.follows.create!(following_user: followed_user)
+
+            # Create sleep record outside 1 day range
+            followed_user.sleep_records.create!(
+              bedtime: 3.days.ago + 22.hours,
+              wake_time: 3.days.ago + 30.hours,
+              duration_minutes: 480
+            )
+          end
+
+          run_test! do |response|
+            data = JSON.parse(response.body)
+            expect(data['sleep_records']).to be_empty
+            expect(data['total_count']).to eq(0)
+            expect(data['date_range']['days_back']).to eq(1)
+            expect(data['message']).to include('No sleep records found in the last 1 days')
+          end
+        end
+      end
+
+      response '400', 'Bad request' do
+        schema '$ref' => '#/components/schemas/Error'
+
+        context 'with invalid date range parameters' do
+          let!(:current_user) { User.create!(name: 'Valid User') }
+          let(:'X-USER-ID') { current_user.id.to_s }
+
+          context 'days parameter too large' do
+            let(:days) { 50 }
+
+            run_test! do |response|
+              data = JSON.parse(response.body)
+              expect(data['error_code']).to eq('INVALID_DATE_RANGE')
+              expect(data['error']).to include('Date range must be between 1 and 30 days')
+            end
+          end
+
+          context 'days parameter too small' do
+            let(:days) { 0 }
+
+            run_test! do |response|
+              data = JSON.parse(response.body)
+              expect(data['error_code']).to eq('INVALID_DATE_RANGE')
+              expect(data['error']).to include('Date range must be between 1 and 30 days')
+            end
           end
         end
       end

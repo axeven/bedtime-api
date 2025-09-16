@@ -83,6 +83,12 @@ paths:
         description: User ID for authentication
         schema:
           type: string
+      - name: days
+        in: query
+        required: false
+        description: Number of days to look back (1-30, default 7)
+        schema:
+          type: integer
       responses:
         '200':
           description: Sleep records retrieved successfully
@@ -120,6 +126,17 @@ paths:
                           format: date-time
                   total_count:
                     type: integer
+                  date_range:
+                    type: object
+                    properties:
+                      days_back:
+                        type: integer
+                      from_date:
+                        type: string
+                        format: date
+                      to_date:
+                        type: string
+                        format: date
         '400':
           description: Authentication required
           content:
