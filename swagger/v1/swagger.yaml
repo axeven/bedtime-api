@@ -70,6 +70,68 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Error"
+  "/api/v1/following/sleep_records":
+    get:
+      summary: Get sleep records from followed users
+      tags:
+      - Social Sleep Data
+      description: Returns completed sleep records from followed users
+      parameters:
+      - name: X-USER-ID
+        in: header
+        required: true
+        description: User ID for authentication
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Sleep records retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sleep_records:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        user_id:
+                          type: integer
+                        user_name:
+                          type: string
+                        bedtime:
+                          type: string
+                          format: date-time
+                        wake_time:
+                          type: string
+                          format: date-time
+                        duration_minutes:
+                          type: integer
+                        formatted_duration:
+                          type: string
+                        sleep_date:
+                          type: string
+                          format: date
+                        created_at:
+                          type: string
+                          format: date-time
+                  total_count:
+                    type: integer
+        '400':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
   "/api/v1/follows":
     post:
       summary: Follow a user

@@ -21,6 +21,10 @@ Rails.application.routes.draw do
       end
       resources :follows, only: [ :create, :index, :destroy ]
       resources :followers, only: [ :index ]
+
+      namespace :following do
+        resources :sleep_records, only: [:index]
+      end
     end
   end
 

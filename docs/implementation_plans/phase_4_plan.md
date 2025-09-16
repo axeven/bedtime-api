@@ -5,11 +5,11 @@ This document provides a detailed implementation plan for Phase 4 of the Bedtime
 
 **Note**: This phase builds on the social following system from Phase 3 and the sleep record functionality from Phase 2. All API endpoints should be documented using rswag specs which automatically generate OpenAPI documentation. Authentication helpers and patterns are available in `spec/support/` directory.
 
-## Phase Status: 🟡 In Progress (1/7 steps completed)
+## Phase Status: 🟡 In Progress (2/7 steps completed)
 
 ### Progress Summary
 - ✅ **Step 1**: Social Sleep Data Model Enhancements - **COMPLETED**
-- ⬜ **Step 2**: Following Users' Sleep Records Endpoint - **Not Started**
+- ✅ **Step 2**: Following Users' Sleep Records Endpoint - **COMPLETED**
 - ⬜ **Step 3**: Date Range Filtering Implementation - **Not Started**
 - ⬜ **Step 4**: Duration-Based Sorting & Aggregation - **Not Started**
 - ⬜ **Step 5**: Complete Records Filter & Privacy Controls - **Not Started**
@@ -133,23 +133,23 @@ end
 **Goal**: Implement API endpoint to retrieve sleep records from users that current user follows
 
 ### Tasks Checklist
-- [ ] Create social_sleep_records_controller.rb or add to existing controller
-- [ ] Implement GET /api/v1/following/sleep_records endpoint
-- [ ] Add proper authentication and authorization
-- [ ] Implement basic social feed functionality
-- [ ] Return sleep record data with user identification
-- [ ] Add proper error handling for edge cases
+- [x] Create social_sleep_records_controller.rb or add to existing controller
+- [x] Implement GET /api/v1/following/sleep_records endpoint
+- [x] Add proper authentication and authorization
+- [x] Implement basic social feed functionality
+- [x] Return sleep record data with user identification
+- [x] Add proper error handling for edge cases
 
 ### Tests to Write First
 **Use rswag for API documentation**
 
-- [ ] rswag API specs for social sleep records (in `spec/requests/api/v1/social_sleep_records_spec.rb`)
-  - [ ] Successful retrieval with results (200)
-  - [ ] Empty results for user following no one (200)
-  - [ ] Authentication required (400)
-  - [ ] Only followed users' records returned
-  - [ ] Only completed records included
-  - [ ] User identification included in response
+- [x] rswag API specs for social sleep records (in `spec/requests/api/v1/following/sleep_records_spec.rb`)
+  - [x] Successful retrieval with results (200)
+  - [x] Empty results for user following no one (200)
+  - [x] Authentication required (400)
+  - [x] Only followed users' records returned
+  - [x] Only completed records included
+  - [x] User identification included in response
 
 ### Implementation Details
 ```ruby
@@ -282,12 +282,12 @@ end
 ```
 
 ### Acceptance Criteria
-- [ ] Endpoint returns sleep records only from followed users
-- [ ] Only completed records (with both bedtime and wake_time) included
-- [ ] Each record includes user identification (ID and name)
-- [ ] Records include all essential sleep data (times, duration)
-- [ ] Empty response handled gracefully with helpful message
-- [ ] Requires authentication via X-USER-ID header
+- [x] Endpoint returns sleep records only from followed users
+- [x] Only completed records (with both bedtime and wake_time) included
+- [x] Each record includes user identification (ID and name)
+- [x] Records include all essential sleep data (times, duration)
+- [x] Empty response handled gracefully with helpful message
+- [x] Requires authentication via X-USER-ID header
 
 ---
 
