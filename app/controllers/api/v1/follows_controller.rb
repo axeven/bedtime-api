@@ -8,8 +8,8 @@ class Api::V1::FollowsController < Api::V1::BaseController
 
     unless following_user
       render_error(
-        'User not found',
-        'USER_NOT_FOUND',
+        "User not found",
+        "USER_NOT_FOUND",
         {},
         :not_found
       )
@@ -18,8 +18,8 @@ class Api::V1::FollowsController < Api::V1::BaseController
 
     if current_user.id == following_user.id
       render_error(
-        'Cannot follow yourself',
-        'SELF_FOLLOW_NOT_ALLOWED',
+        "Cannot follow yourself",
+        "SELF_FOLLOW_NOT_ALLOWED",
         {},
         :unprocessable_entity
       )
@@ -39,10 +39,10 @@ class Api::V1::FollowsController < Api::V1::BaseController
         created_at: follow.created_at.iso8601
       }, :created)
     else
-      if follow.errors[:user_id]&.include?('has already been taken')
+      if follow.errors[:user_id]&.include?("has already been taken")
         render_error(
-          'Already following this user',
-          'DUPLICATE_FOLLOW',
+          "Already following this user",
+          "DUPLICATE_FOLLOW",
           {},
           :unprocessable_entity
         )
@@ -53,7 +53,7 @@ class Api::V1::FollowsController < Api::V1::BaseController
   end
 
   def index
-    limit = [params[:limit]&.to_i || 20, 100].min
+    limit = [ params[:limit]&.to_i || 20, 100 ].min
     offset = params[:offset]&.to_i || 0
 
     # Use existing cached count from User model
@@ -74,7 +74,7 @@ class Api::V1::FollowsController < Api::V1::BaseController
       # Don't cache large offsets or large limits
       following_data = fetch_paginated_following(limit, offset)
       cached = false
-      cache_key = 'not_cached'
+      cache_key = "not_cached"
     end
 
     render_success({
@@ -97,8 +97,8 @@ class Api::V1::FollowsController < Api::V1::BaseController
 
     unless following_user
       render_error(
-        'User not found',
-        'USER_NOT_FOUND',
+        "User not found",
+        "USER_NOT_FOUND",
         {},
         :not_found
       )
@@ -109,8 +109,8 @@ class Api::V1::FollowsController < Api::V1::BaseController
 
     unless follow
       render_error(
-        'Not following this user',
-        'FOLLOW_RELATIONSHIP_NOT_FOUND',
+        "Not following this user",
+        "FOLLOW_RELATIONSHIP_NOT_FOUND",
         {},
         :not_found
       )

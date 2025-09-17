@@ -27,15 +27,15 @@ module PerformanceHelper
     end
 
     explained = ActiveRecord::Base.connection.execute("EXPLAIN ANALYZE #{sql}")
-    explanation = explained.to_a.map { |row| row['QUERY PLAN'] }.join("\n")
+    explanation = explained.to_a.map { |row| row["QUERY PLAN"] }.join("\n")
 
     Rails.logger.info "QUERY ANALYSIS:\n#{explanation}"
 
     {
       sql: sql,
       explanation: explanation,
-      uses_index: explanation.include?('Index Scan') || explanation.include?('Index Only Scan'),
-      has_seq_scan: explanation.include?('Seq Scan')
+      uses_index: explanation.include?("Index Scan") || explanation.include?("Index Only Scan"),
+      has_seq_scan: explanation.include?("Seq Scan")
     }
   end
 
@@ -43,7 +43,7 @@ module PerformanceHelper
   def count_queries(&block)
     query_count = 0
 
-    subscription = ActiveSupport::Notifications.subscribe('sql.active_record') do |name, start, finish, id, payload|
+    subscription = ActiveSupport::Notifications.subscribe("sql.active_record") do |name, start, finish, id, payload|
       # Skip schema queries and transactions
       unless payload[:sql].match?(/^(BEGIN|COMMIT|ROLLBACK|SAVEPOINT|RELEASE|SET|SELECT [\d\w\s,]+ FROM "schema_migrations")/i)
         query_count += 1
@@ -130,7 +130,7 @@ module PerformanceHelper
 
     # Create follow relationships
     users.each do |user|
-      other_users = (users - [user]).sample([follows_per_user, users.length - 1].min)
+      other_users = (users - [ user ]).sample([ follows_per_user, users.length - 1 ].min)
       other_users.each do |other_user|
         begin
           Follow.create!(user: user, following_user: other_user)
@@ -258,6 +258,6 @@ module PerformanceHelper
     # Add points for index usage
     score += 10 if analysis_result[:uses_index]
 
-    [score, 0].max
+    [ score, 0 ].max
   end
 end

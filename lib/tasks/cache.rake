@@ -20,7 +20,7 @@ namespace :cache do
   end
 
   desc "Warm up cache for specific user"
-  task :warm_user, [:user_id] => :environment do |t, args|
+  task :warm_user, [ :user_id ] => :environment do |t, args|
     user_id = args[:user_id]
 
     if user_id.blank?
@@ -59,7 +59,7 @@ namespace :cache do
   end
 
   desc "Clear cache patterns for specific user"
-  task :clear_user, [:user_id] => :environment do |t, args|
+  task :clear_user, [ :user_id ] => :environment do |t, args|
     user_id = args[:user_id]
 
     if user_id.blank?
@@ -71,7 +71,7 @@ namespace :cache do
     puts "Clearing cache for user #{user.id} (#{user.name})"
 
     # Clear CacheService patterns using constants
-    pattern_names = [:following_list, :followers_list, :social_sleep_stats, :sleep_statistics]
+    pattern_names = [ :following_list, :followers_list, :social_sleep_stats, :sleep_statistics ]
 
     pattern_names.each do |pattern_name|
       CacheService.delete_user_pattern(pattern_name, user.id)
@@ -94,7 +94,7 @@ namespace :cache do
 
   desc "Performance benchmark for cache operations"
   task benchmark: :environment do
-    require 'benchmark'
+    require "benchmark"
 
     puts "Cache Performance Benchmark"
     puts "=========================="

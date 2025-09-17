@@ -28,7 +28,7 @@ RSpec.describe 'api/v1/follows', type: :request do
                       example: 2
                     }
                   },
-                  required: ['following_user_id']
+                  required: [ 'following_user_id' ]
                 }
 
       response '201', 'Follow created successfully' do

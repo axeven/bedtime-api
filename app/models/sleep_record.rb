@@ -18,8 +18,8 @@ class SleepRecord < ApplicationRecord
   # Optimized scopes for better performance
   scope :with_duration, -> { completed.where.not(duration_minutes: nil) }
   scope :recent_completed, -> { completed.where(bedtime: 7.days.ago..Time.current) }
-  scope :long_sleeps, -> { completed.where('duration_minutes >= ?', 480) } # 8+ hours
-  scope :short_sleeps, -> { completed.where('duration_minutes <= ?', 300) } # 5- hours
+  scope :long_sleeps, -> { completed.where("duration_minutes >= ?", 480) } # 8+ hours
+  scope :short_sleeps, -> { completed.where("duration_minutes <= ?", 300) } # 5- hours
 
   # Social feed scopes for retrieving sleep data from followed users
   scope :completed_records, -> {
@@ -34,13 +34,13 @@ class SleepRecord < ApplicationRecord
   # Flexible sorting scope for social feed
   scope :apply_sorting, ->(sort_by) {
     case sort_by
-    when 'duration'
+    when "duration"
       order(duration_minutes: :desc)
-    when 'bedtime'
+    when "bedtime"
       order(bedtime: :desc)
-    when 'wake_time'
+    when "wake_time"
       order(wake_time: :desc)
-    when 'created_at'
+    when "created_at"
       order(created_at: :desc)
     else
       order(duration_minutes: :desc) # Default
@@ -70,7 +70,7 @@ class SleepRecord < ApplicationRecord
       .where(follows: { user_id: user.id })
       .where.not(wake_time: nil)
       .includes(:user)
-      .select('sleep_records.*, users.name as user_name')
+      .select("sleep_records.*, users.name as user_name")
   end
 
   def self.social_feed_with_pagination(user, limit: 20, offset: 0)

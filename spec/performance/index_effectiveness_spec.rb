@@ -27,9 +27,9 @@ RSpec.describe 'Index Effectiveness', type: :model do
 
   after(:all) do
     # Clean up test data
-    Follow.where(user: [@test_user, @other_user]).delete_all
-    SleepRecord.where(user: [@test_user, @other_user]).delete_all
-    [@test_user, @other_user].each(&:destroy)
+    Follow.where(user: [ @test_user, @other_user ]).delete_all
+    SleepRecord.where(user: [ @test_user, @other_user ]).delete_all
+    [ @test_user, @other_user ].each(&:destroy)
   end
 
   describe 'Sleep Records Index Usage' do

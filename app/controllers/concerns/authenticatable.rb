@@ -25,7 +25,7 @@ module Authenticatable
         error: "User not found",
         error_code: "USER_NOT_FOUND"
       }, status: :not_found
-      return
+      nil
     end
   end
 

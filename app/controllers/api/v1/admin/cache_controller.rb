@@ -1,6 +1,6 @@
 class Api::V1::Admin::CacheController < Api::V1::BaseController
   # For development/admin use - could be protected with admin authentication in production
-  skip_before_action :authenticate_user, only: [:stats, :clear, :warm, :debug]
+  skip_before_action :authenticate_user, only: [ :stats, :clear, :warm, :debug ]
 
   def stats
     cache_stats = CacheService.cache_stats
@@ -11,15 +11,15 @@ class Api::V1::Admin::CacheController < Api::V1::BaseController
     render_success({
       cache_stats: cache_stats,
       redis_info: {
-        version: redis_info['redis_version'],
-        uptime_in_seconds: redis_info['uptime_in_seconds'],
-        connected_clients: redis_info['connected_clients'],
-        used_memory_human: redis_info['used_memory_human'],
-        used_memory_peak_human: redis_info['used_memory_peak_human'],
-        keyspace_hits: redis_info['keyspace_hits'],
-        keyspace_misses: redis_info['keyspace_misses'],
-        expired_keys: redis_info['expired_keys'],
-        evicted_keys: redis_info['evicted_keys']
+        version: redis_info["redis_version"],
+        uptime_in_seconds: redis_info["uptime_in_seconds"],
+        connected_clients: redis_info["connected_clients"],
+        used_memory_human: redis_info["used_memory_human"],
+        used_memory_peak_human: redis_info["used_memory_peak_human"],
+        keyspace_hits: redis_info["keyspace_hits"],
+        keyspace_misses: redis_info["keyspace_misses"],
+        expired_keys: redis_info["expired_keys"],
+        evicted_keys: redis_info["evicted_keys"]
       },
       environment: Rails.env,
       cache_store: Rails.cache.class.name
@@ -35,7 +35,7 @@ class Api::V1::Admin::CacheController < Api::V1::BaseController
       message = "Cleared cache pattern: #{pattern}"
     elsif user_id.present?
       # Clear CacheService patterns using constants
-      pattern_names = [:following_list, :followers_list, :social_sleep_stats, :sleep_statistics]
+      pattern_names = [ :following_list, :followers_list, :social_sleep_stats, :sleep_statistics ]
       pattern_names.each { |pattern_name| CacheService.delete_user_pattern(pattern_name, user_id) }
 
       # Clear User model count caches using constants
@@ -81,16 +81,16 @@ class Api::V1::Admin::CacheController < Api::V1::BaseController
 
   def debug
     user_id = params[:user_id]
-    return render_error('user_id parameter required', 'MISSING_USER_ID', {}, :bad_request) unless user_id
+    return render_error("user_id parameter required", "MISSING_USER_ID", {}, :bad_request) unless user_id
 
     user = User.find(user_id)
 
     # Sample cache keys for this user using constants
     cache_keys = [
-      CacheService.cache_key(:following_list, user.id, '20_0'),
-      CacheService.cache_key(:followers_list, user.id, '20_0'),
-      CacheService.cache_key(:social_sleep_stats, user.id, '7d_duration'),
-      CacheService.cache_key(:sleep_statistics, user.id, '7_days')
+      CacheService.cache_key(:following_list, user.id, "20_0"),
+      CacheService.cache_key(:followers_list, user.id, "20_0"),
+      CacheService.cache_key(:social_sleep_stats, user.id, "7d_duration"),
+      CacheService.cache_key(:sleep_statistics, user.id, "7_days")
     ]
 
     debug_info = cache_keys.map do |key|
@@ -99,7 +99,7 @@ class Api::V1::Admin::CacheController < Api::V1::BaseController
         key: key,
         exists: cached_data.present?,
         data_type: cached_data.class.name,
-        data_size: cached_data.respond_to?(:size) ? cached_data.size : 'unknown'
+        data_size: cached_data.respond_to?(:size) ? cached_data.size : "unknown"
       }
     end
 

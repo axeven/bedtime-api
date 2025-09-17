@@ -115,7 +115,7 @@ RSpec.describe 'Query Performance Benchmarks', type: :request do
     end
 
     it 'benchmarks different sorting options' do
-      sort_options = ['duration', 'bedtime', 'wake_time', 'created_at']
+      sort_options = [ 'duration', 'bedtime', 'wake_time', 'created_at' ]
       results = {}
 
       sort_options.each do |sort_option|
@@ -137,7 +137,7 @@ RSpec.describe 'Query Performance Benchmarks', type: :request do
 
     it 'measures social statistics calculation performance' do
       # Test with different day ranges
-      [3, 7, 14, 30].each do |days|
+      [ 3, 7, 14, 30 ].each do |days|
         performance = benchmark_query("Statistics for #{days} days") do
           get '/api/v1/following/sleep_records', headers: auth_headers, params: {
             days: days,

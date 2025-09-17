@@ -4,7 +4,7 @@ class Api::V1::FollowersController < Api::V1::BaseController
   before_action :authenticate_user
 
   def index
-    limit = [params[:limit]&.to_i || 20, 100].min
+    limit = [ params[:limit]&.to_i || 20, 100 ].min
     offset = params[:offset]&.to_i || 0
 
     # Use existing cached count from User model
@@ -25,7 +25,7 @@ class Api::V1::FollowersController < Api::V1::BaseController
       # Don't cache large offsets or large limits
       followers_data = fetch_paginated_followers(limit, offset)
       cached = false
-      cache_key = 'not_cached'
+      cache_key = "not_cached"
     end
 
     render_success({

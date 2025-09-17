@@ -23,7 +23,7 @@ Rails.application.routes.draw do
       resources :followers, only: [ :index ]
 
       namespace :following do
-        resources :sleep_records, only: [:index]
+        resources :sleep_records, only: [ :index ]
       end
 
       # Cache admin routes (development/admin only)

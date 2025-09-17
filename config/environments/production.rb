@@ -45,14 +45,14 @@ Rails.application.configure do
 
   # Redis caching configuration for production
   config.cache_store = :redis_cache_store, {
-    url: ENV.fetch('REDIS_URL', 'redis://localhost:6379/0'),
+    url: ENV.fetch("REDIS_URL", "redis://localhost:6379/0"),
     connect_timeout: 30,
     read_timeout: 0.2,
     write_timeout: 0.2,
     reconnect_attempts: 1,
     pool_size: 10,
     pool_timeout: 5,
-    error_handler: -> (method:, returning:, exception:) {
+    error_handler: ->(method:, returning:, exception:) {
       Rails.logger.error "Redis cache error: #{exception.message}"
     }
   }

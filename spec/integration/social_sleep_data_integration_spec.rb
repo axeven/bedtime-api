@@ -35,7 +35,7 @@ RSpec.describe 'Social Sleep Data Integration', type: :request do
         # Should only include completed records from followed users
         expect(data['sleep_records'].size).to be > 0
         data['sleep_records'].each do |record|
-          expect([sleeper1.id, sleeper2.id, sleeper3.id]).to include(record['user_id'])
+          expect([ sleeper1.id, sleeper2.id, sleeper3.id ]).to include(record['user_id'])
           expect(record['record_complete']).to be(true)
           expect(record['bedtime']).to be_present
           expect(record['wake_time']).to be_present
@@ -77,7 +77,7 @@ RSpec.describe 'Social Sleep Data Integration', type: :request do
         # Test with a date range that excludes existing recent records
         # We'll look for records from 10-8 days ago (should be empty)
         # First, let's clear recent records and create an old one
-        SleepRecord.where(user: [sleeper1, sleeper2, sleeper3]).destroy_all
+        SleepRecord.where(user: [ sleeper1, sleeper2, sleeper3 ]).destroy_all
 
         old_record = sleeper1.sleep_records.create!(
           bedtime: 40.days.ago + 22.hours,
@@ -140,7 +140,7 @@ RSpec.describe 'Social Sleep Data Integration', type: :request do
     context 'Pagination across large social sleep datasets' do
       before do
         # Create more records for pagination testing with unique timestamps
-        [sleeper1, sleeper2, sleeper3].each_with_index do |user, user_index|
+        [ sleeper1, sleeper2, sleeper3 ].each_with_index do |user, user_index|
           5.times do |i|
             # Use unique timestamps that don't overlap with existing records
             base_time = (100 + i + user_index * 10).hours.ago
@@ -229,7 +229,7 @@ RSpec.describe 'Social Sleep Data Integration', type: :request do
         expect(user_ids).not_to include(non_followed_user.id)
 
         # Should only include followed users
-        expect(user_ids.uniq.sort).to eq([sleeper1.id, sleeper2.id, sleeper3.id].sort)
+        expect(user_ids.uniq.sort).to eq([ sleeper1.id, sleeper2.id, sleeper3.id ].sort)
       end
 
       it 'excludes incomplete records' do

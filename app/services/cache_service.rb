@@ -1,20 +1,20 @@
 class CacheService
   # Cache key patterns for easy management
   CACHE_PATTERNS = {
-    following_list: 'following_list:user:%{user_id}:%{suffix}',
-    followers_list: 'followers_list:user:%{user_id}:%{suffix}',
-    following_count: 'user:%{user_id}:following_count',
-    followers_count: 'user:%{user_id}:followers_count',
-    social_sleep_stats: 'social_sleep_stats:user:%{user_id}:%{suffix}',
-    sleep_statistics: 'sleep_statistics:user:%{user_id}:%{suffix}'
+    following_list: "following_list:user:%{user_id}:%{suffix}",
+    followers_list: "followers_list:user:%{user_id}:%{suffix}",
+    following_count: "user:%{user_id}:following_count",
+    followers_count: "user:%{user_id}:followers_count",
+    social_sleep_stats: "social_sleep_stats:user:%{user_id}:%{suffix}",
+    sleep_statistics: "sleep_statistics:user:%{user_id}:%{suffix}"
   }.freeze
 
   # Cache key prefixes for pattern deletion
   CACHE_PREFIXES = {
-    following_list: 'following_list:user:%{user_id}:*',
-    followers_list: 'followers_list:user:%{user_id}:*',
-    social_sleep_stats: 'social_sleep_stats:user:%{user_id}:*',
-    sleep_statistics: 'sleep_statistics:user:%{user_id}:*'
+    following_list: "following_list:user:%{user_id}:*",
+    followers_list: "followers_list:user:%{user_id}:*",
+    social_sleep_stats: "social_sleep_stats:user:%{user_id}:*",
+    sleep_statistics: "sleep_statistics:user:%{user_id}:*"
   }.freeze
 
   EXPIRATION_TIMES = {
@@ -55,7 +55,7 @@ class CacheService
       pattern % { user_id: user_id, suffix: suffix }
     else
       # For patterns without suffix, remove the suffix part
-      base_pattern = pattern.gsub(':%{suffix}', '')
+      base_pattern = pattern.gsub(":%{suffix}", "")
       base_pattern % { user_id: user_id }
     end
   end
@@ -95,7 +95,7 @@ class CacheService
   def self.warm_following_cache(user)
     # Only warm first page cache (most commonly accessed)
     # Count is handled by User model's following_count method
-    list_key = cache_key(:following_list, user.id, '20_0')
+    list_key = cache_key(:following_list, user.id, "20_0")
     fetch(list_key, expires_in: 30.minutes) do
       user.follows.includes(:following_user)
           .order(created_at: :desc)
@@ -116,7 +116,7 @@ class CacheService
   def self.warm_followers_cache(user)
     # Only warm first page cache (most commonly accessed)
     # Count is handled by User model's followers_count method
-    list_key = cache_key(:followers_list, user.id, '20_0')
+    list_key = cache_key(:followers_list, user.id, "20_0")
     fetch(list_key, expires_in: 30.minutes) do
       user.follower_relationships.includes(:user)
           .order(created_at: :desc)
@@ -135,7 +135,7 @@ class CacheService
   end
 
   def self.warm_sleep_statistics_cache(user)
-    key = cache_key(:sleep_statistics, user.id, '7_days')
+    key = cache_key(:sleep_statistics, user.id, "7_days")
     fetch(key, expires_in: EXPIRATION_TIMES[:sleep_statistics]) do
       calculate_sleep_statistics(user, 7.days.ago)
     end

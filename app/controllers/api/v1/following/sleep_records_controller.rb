@@ -7,8 +7,8 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
 
   def index
     days_back = params[:days]&.to_i || 7
-    sort_by = params[:sort_by] || 'duration'
-    limit = [params[:limit]&.to_i || 20, 100].min
+    sort_by = params[:sort_by] || "duration"
+    limit = [ params[:limit]&.to_i || 20, 100 ].min
     offset = params[:offset]&.to_i || 0
 
     # Base query with performance optimizations
@@ -75,8 +75,8 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
 
   def privacy_info
     {
-      data_source: 'followed_users_only',
-      record_types: 'completed_records_only',
+      data_source: "followed_users_only",
+      record_types: "completed_records_only",
       your_records_included: false,
       following_count: current_user.following_users.count
     }
@@ -97,9 +97,9 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
       limit = params[:limit].to_i
       if limit < 1 || limit > 100
         render_error(
-          'Limit must be between 1 and 100',
-          'INVALID_PAGINATION_LIMIT',
-          { allowed_range: '1-100' },
+          "Limit must be between 1 and 100",
+          "INVALID_PAGINATION_LIMIT",
+          { allowed_range: "1-100" },
           :bad_request
         )
         return
@@ -110,12 +110,12 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
       offset = params[:offset].to_i
       if offset < 0
         render_error(
-          'Offset must be non-negative',
-          'INVALID_PAGINATION_OFFSET',
+          "Offset must be non-negative",
+          "INVALID_PAGINATION_OFFSET",
           {},
           :bad_request
         )
-        return
+        nil
       end
     end
   end
@@ -124,8 +124,8 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
     allowed_sorts = %w[duration bedtime wake_time created_at]
     if params[:sort_by].present? && !allowed_sorts.include?(params[:sort_by])
       render_error(
-        'Invalid sort parameter',
-        'INVALID_SORT_PARAMETER',
+        "Invalid sort parameter",
+        "INVALID_SORT_PARAMETER",
         { allowed_values: allowed_sorts },
         :bad_request
       )
@@ -177,7 +177,7 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
       offset: offset,
       has_more: (offset + limit) < total_count,
       next_offset: (offset + limit) < total_count ? (offset + limit) : nil,
-      previous_offset: offset > 0 ? [offset - limit, 0].max : nil
+      previous_offset: offset > 0 ? [ offset - limit, 0 ].max : nil
     }
   end
 
@@ -193,12 +193,12 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
     # Single SQL query for all aggregations to reduce database round trips
     stats_sql = base_query
       .select(
-        'COUNT(*) as total_records',
-        'AVG(duration_minutes) as avg_duration',
-        'MIN(duration_minutes) as min_duration',
-        'MAX(duration_minutes) as max_duration',
-        'SUM(duration_minutes) as total_duration',
-        'COUNT(DISTINCT user_id) as unique_users'
+        "COUNT(*) as total_records",
+        "AVG(duration_minutes) as avg_duration",
+        "MIN(duration_minutes) as min_duration",
+        "MAX(duration_minutes) as max_duration",
+        "SUM(duration_minutes) as total_duration",
+        "COUNT(DISTINCT user_id) as unique_users"
       ).first
 
     return generate_empty_statistics if stats_sql.total_records == 0
@@ -220,12 +220,12 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
       days = params[:days].to_i
       if days < 1 || days > 30
         render_error(
-          'Date range must be between 1 and 30 days',
-          'INVALID_DATE_RANGE',
-          { allowed_range: '1-30 days' },
+          "Date range must be between 1 and 30 days",
+          "INVALID_DATE_RANGE",
+          { allowed_range: "1-30 days" },
           :bad_request
         )
-        return
+        nil
       end
     end
   end

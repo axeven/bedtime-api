@@ -1,6 +1,6 @@
 class Follow < ApplicationRecord
   belongs_to :user
-  belongs_to :following_user, class_name: 'User'
+  belongs_to :following_user, class_name: "User"
 
   validates :user, presence: true
   validates :following_user, presence: true
