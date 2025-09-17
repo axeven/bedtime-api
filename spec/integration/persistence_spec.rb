@@ -1,7 +1,17 @@
 require 'rails_helper'
 
 RSpec.describe 'Database Persistence', type: :request do
-  describe 'data survives application restarts', :uses_database_restart do
+  # Disable transactional fixtures for persistence tests since we need real commits
+  self.use_transactional_tests = false
+
+  after(:each) do
+    # Clean up manually since we disabled transactional fixtures
+    SleepRecord.delete_all
+    Follow.delete_all
+    User.delete_all
+  end
+
+  describe 'data survives application restarts' do
     let!(:user) { create(:user, name: 'Persistent User') }
 
     it 'maintains sleep records after simulated restart' do
