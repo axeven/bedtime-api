@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe 'Database Persistence', type: :request do
-  describe 'data survives application restarts' do
+  describe 'data survives application restarts', :uses_database_restart do
     let!(:user) { create(:user, name: 'Persistent User') }
 
     it 'maintains sleep records after simulated restart' do

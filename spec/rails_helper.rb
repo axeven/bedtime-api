@@ -38,6 +38,14 @@ RSpec.configure do |config|
   # Configure FactoryBot
   config.include FactoryBot::Syntax::Methods
 
+  # Disable transactional fixtures for tests that restart database connections
+  config.around(:each, :uses_database_restart) do |example|
+    self.use_transactional_tests = false
+    example.run
+    # Clean up manually after the test
+    ActiveRecord::Base.connection.execute("TRUNCATE TABLE users, sleep_records, follows RESTART IDENTITY CASCADE")
+  end
+
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_paths = [
     Rails.root.join('spec/fixtures')
