@@ -70,7 +70,7 @@ jobs:
           ruby-version: .ruby-version
           bundler-cache: true
 
-      - name: Setup database
+      - name: Setup database v2
         env:
           RAILS_ENV: test
           DATABASE_HOST: localhost
@@ -82,7 +82,7 @@ jobs:
           bin/rails db:create
           bin/rails db:migrate
 
-      - name: Run tests
+      - name: Run tests v2
         env:
           RAILS_ENV: test
           DATABASE_HOST: localhost
