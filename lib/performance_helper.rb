@@ -20,12 +20,19 @@ module PerformanceHelper
 
   # Analyze a query using EXPLAIN ANALYZE
   def analyze_query(query)
-    if query.respond_to?(:to_sql)
-      sql = query.to_sql
-    else
-      sql = query.to_s
+    # Only accept ActiveRecord::Relation objects to prevent SQL injection
+    unless query.respond_to?(:to_sql) && query.is_a?(ActiveRecord::Relation)
+      raise ArgumentError, "Query must be an ActiveRecord::Relation for security"
     end
 
+    sql = query.to_sql
+
+    # Additional safety check: ensure it's a SELECT query
+    unless sql.strip.match?(/\ASELECT\s+/i)
+      raise ArgumentError, "Only SELECT queries are allowed for analysis"
+    end
+
+    # Safely execute EXPLAIN ANALYZE using the validated SQL
     explained = ActiveRecord::Base.connection.execute("EXPLAIN ANALYZE #{sql}")
     explanation = explained.to_a.map { |row| row["QUERY PLAN"] }.join("\n")
 
