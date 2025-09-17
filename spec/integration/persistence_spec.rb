@@ -59,7 +59,7 @@ RSpec.describe 'Database Persistence', type: :request do
     it 'maintains user data integrity after restart' do
       # Create user and record through API
       post '/api/v1/users',
-        params: { user: { name: 'Restart Test User' } },
+        params: { user: { name: 'Restart Test User' } }.to_json,
         headers: { 'Content-Type' => 'application/json' }
 
       expect(response).to have_http_status(:created)
