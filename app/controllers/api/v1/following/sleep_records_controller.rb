@@ -54,8 +54,8 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
       }
     end
 
-    # Generate statistics from full dataset, not just current page
-    statistics = generate_statistics_from_base_query(base_query)
+    # Generate statistics with caching
+    statistics = cached_statistics(base_query, days_back, sort_by)
 
     render_success({
       sleep_records: records_data,
@@ -179,6 +179,14 @@ class Api::V1::Following::SleepRecordsController < Api::V1::BaseController
       next_offset: (offset + limit) < total_count ? (offset + limit) : nil,
       previous_offset: offset > 0 ? [offset - limit, 0].max : nil
     }
+  end
+
+  def cached_statistics(base_query, days_back, sort_by)
+    cache_key = CacheService.cache_key(:social_sleep_stats, current_user.id, "#{days_back}d_#{sort_by}")
+
+    CacheService.fetch(cache_key, expires_in: CacheService::EXPIRATION_TIMES[:sleep_statistics]) do
+      generate_statistics_from_base_query(base_query)
+    end
   end
 
   def generate_statistics_from_base_query(base_query)

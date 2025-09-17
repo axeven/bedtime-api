@@ -25,6 +25,18 @@ Rails.application.routes.draw do
       namespace :following do
         resources :sleep_records, only: [:index]
       end
+
+      # Cache admin routes (development/admin only)
+      namespace :admin do
+        resources :cache, only: [] do
+          collection do
+            get :stats
+            post :clear
+            post :warm
+            get :debug
+          end
+        end
+      end
     end
   end
 

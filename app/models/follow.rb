@@ -21,10 +21,14 @@ class Follow < ApplicationRecord
   end
 
   def invalidate_follow_caches
-    # Invalidate follower's following count cache
-    Rails.cache.delete("user:#{user_id}:following_count")
+    # Invalidate User model count caches
+    Rails.cache.delete(CacheService.cache_key(:following_count, user_id))
+    Rails.cache.delete(CacheService.cache_key(:followers_count, following_user_id))
 
-    # Invalidate following_user's followers count cache
-    Rails.cache.delete("user:#{following_user_id}:followers_count")
+    # Invalidate CacheService list patterns (only small result sets are cached)
+    CacheService.delete_user_pattern(:following_list, user_id)
+    CacheService.delete_user_pattern(:followers_list, following_user_id)
+    CacheService.delete_user_pattern(:social_sleep_stats, user_id)
+    CacheService.delete_user_pattern(:sleep_statistics, user_id)
   end
 end
